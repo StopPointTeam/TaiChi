@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "sensor.h"
+#include "sensorTaiChi.h"
 
 
 Sensor::Sensor()

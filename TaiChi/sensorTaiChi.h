@@ -1,5 +1,5 @@
-#ifndef SENSOR_H
-#define SENSOR_H
+#ifndef SENSORTAICHI_H
+#define SENSORTAICHI_H
 
 #define DEBUG
 

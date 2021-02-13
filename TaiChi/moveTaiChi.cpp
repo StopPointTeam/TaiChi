@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "move.h"
+#include "moveTaiChi.h"
 
 
 Move::Move()

@@ -1,5 +1,5 @@
-#ifndef SERVO_H
-#define SERVO_H
+#ifndef SERVOTAICHI_H
+#define SERVOTAICHI_H
 
 
 #include <Arduino.h>

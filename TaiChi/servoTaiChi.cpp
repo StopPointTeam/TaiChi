@@ -1,4 +1,4 @@
-#include "servo.h"
+#include "servoTaiChi.h"
 
 
 #define GET_LOW_BYTE(A) (uint8_t)((A))
