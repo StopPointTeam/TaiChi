@@ -23,10 +23,20 @@ int8_t route[][3] =
 {
     {0, 0, NORMAL_POINT},
     {0, 1, NORMAL_POINT},
-    {1, 1, CATCH_POINT},
-    {1, 2, NORMAL_POINT},
+    {0, 2, CATCH_POINT},
+    {0, 3, NORMAL_POINT},
+    {1, 3, NORMAL_POINT},
+    {2, 3, NORMAL_POINT},
+    {2, 4, NORMAL_POINT},
+    {3, 4, RELEASE_POINT},
+    {2, 4, NORMAL_POINT},
+    {2, 3, NORMAL_POINT},
+    {2, 2, CATCH_POINT},
+    {3, 2, RELEASE_POINT},
     {2, 2, NORMAL_POINT},
-    {2, 3, RELEASE_POINT}
+    {1, 2, NORMAL_POINT},
+    {0, 2, NORMAL_POINT},
+    {0, 1, NORMAL_POINT}
 };
 //***************************************************************************************
 
@@ -53,8 +63,13 @@ int8_t route[][3] =
 
 
 //****************************************全局变量****************************************
-//刚刚越过的点的数组位置标记
+//数组位置标记
 int passed_flag = 0;
+int next_flag = 1;
+int next_next_flag = 2;
+
+//最大数组位置标记
+int max_flag;
 
 #define FRONT_NEXT 0
 #define BACK_NEXT 1
@@ -87,6 +102,9 @@ void setup()
     move.Stop();
     servo.StopAndReset();
 
+    //计算最大数组下标
+    max_flag = sizeof(route) / sizeof(route[0]) - 1;
+
     //前往 0, 0
     //沿线直行，到后端传感器接触下一条线为止
     LineForward(BACK_END);
@@ -115,9 +133,6 @@ void loop()
 
         //继续直行或后退或转向
         TurnDirection(direction);
-
-        //更新标记，继续循环
-        passed_flag++;
     }
     //情况二：刚完整经过普通点，下一个点为抓取点
     else if (route[passed_flag][TYPE] == NORMAL_POINT && route[passed_flag + 1][TYPE] == CATCH_POINT)
@@ -135,8 +150,7 @@ void loop()
         //继续直行或后退或转向
         TurnDirection(CalcDirection());
 
-        //抓取完成后，更新标记，将越过的点视为普通点，继续循环
-        passed_flag++;
+        //抓取完成后，将越过的点视为普通点
         route[passed_flag][TYPE] = NORMAL_POINT;
     }
     //情况三：刚完整经过普通点，下一个点为释放点
@@ -149,8 +163,7 @@ void loop()
         servo.Release();
         delay(RELEASE_DELAY_TIME); //释放留时
 
-        //释放完成后，更新标记，下一点朝向为后，继续循环
-        passed_flag++;
+        //释放完成后，下一点朝向为后
         next_position = BACK_NEXT;
     }
     //情况四：刚完整经过释放点，下一个点为普通点
@@ -167,11 +180,18 @@ void loop()
 
         //继续后退或转向
         TurnDirection(direction);
-
-        //更新标记，继续循环
-        passed_flag++;
     }
     else move.Stop(); //DEBUG
+
+    //更新标记，继续循环
+    if (++passed_flag > max_flag)
+        passed_flag = 0;
+
+    if (++next_flag > max_flag)
+        next_flag = 0;
+
+    if (++next_next_flag > max_flag)
+        next_next_flag = 0;
 }
 
 
@@ -179,12 +199,12 @@ void loop()
 uint8_t CalcDirection(void)
 {
     //计算第三点与第一点的相对坐标 rx0, ry0
-    int8_t rx0 = route[passed_flag + 2][X] - route[passed_flag][X];
-    int8_t ry0 = route[passed_flag + 2][Y] - route[passed_flag][Y];
+    int8_t rx0 = route[next_next_flag][X] - route[passed_flag][X];
+    int8_t ry0 = route[next_next_flag][Y] - route[passed_flag][Y];
 
     //计算当前小车朝向的方向向量 vx, vy
-    int8_t vx = route[passed_flag + 1][X] - route[passed_flag][X];
-    int8_t vy = route[passed_flag + 1][Y] - route[passed_flag][Y];
+    int8_t vx = route[next_flag][X] - route[passed_flag][X];
+    int8_t vy = route[next_flag][Y] - route[passed_flag][Y];
 
     //坐标旋转变换
     int8_t rx, ry;
@@ -360,7 +380,7 @@ void TurnDirection(uint8_t direction, double speed_rate)
     else if (direction == BACKWARD) //继续后退
     {
         //沿线后退，到前端传感器接触线为止
-        LineForward(FRONT_END, speed_rate);
+        LineBackward(FRONT_END, speed_rate);
     }
     else //继续转向
     {
