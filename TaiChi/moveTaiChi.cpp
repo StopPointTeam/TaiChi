@@ -7,11 +7,11 @@ Move::Move()
 {
     global_speed_rate = DEFAULT_GLOBAL_SPEED_RATE;
     current_move = STOP;
-    current_speed_rate = 0;
+    current_speed_rate = 0.0;
 }
 
 
-Move::Move(int global_speed_rate)
+Move::Move(double global_speed_rate)
 {
     Move();
     
@@ -20,7 +20,7 @@ Move::Move(int global_speed_rate)
 
 
 //设置全局速度比率
-void Move::SetGlobalSpeedRate(int global_speed_rate)
+void Move::SetGlobalSpeedRate(double global_speed_rate)
 {
     this->global_speed_rate = global_speed_rate;
 }
@@ -34,14 +34,14 @@ uint8_t Move::GetCurrentMove(void)
 
 
 //获取当前运动速度比率
-int Move::GetCurrentSpeedRate(void)
+double Move::GetCurrentSpeedRate(void)
 {
     return current_speed_rate;
 }
 
 
 //控制某个轮子转动
-void Move::Wheel(uint8_t wheel, uint8_t rotation, int speed_rate)
+void Move::Wheel(uint8_t wheel, uint8_t rotation, double speed_rate)
 {
     uint8_t pin_in1, pin_in2, pin_ena;
 
@@ -83,7 +83,7 @@ void Move::Wheel(uint8_t wheel, uint8_t rotation, int speed_rate)
         return; //结束函数
     }
     
-    analogWrite(pin_ena, speed_rate * global_speed_rate * 255.0 / 10000.0); //设置 PWM 波，即转速
+    analogWrite(pin_ena, speed_rate * global_speed_rate * 255.0); //设置 PWM 波，即转速
 
     if (rotation == FORWARD_ROTATION) //向前转动
     {
@@ -99,7 +99,7 @@ void Move::Wheel(uint8_t wheel, uint8_t rotation, int speed_rate)
 
 
 //前进
-void Move::Forward(int speed_rate)
+void Move::Forward(double speed_rate)
 {
     Wheel(LEFT_A_WHEEL, FORWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, FORWARD_ROTATION, speed_rate);
@@ -107,12 +107,12 @@ void Move::Forward(int speed_rate)
     Wheel(RIGHT_B_WHEEL, FORWARD_ROTATION, speed_rate);
 
     current_move = FORWARD;
-    current_speed_rate = speed_rate * global_speed_rate / 100.0;
+    current_speed_rate = speed_rate;
 }
 
 
 //后退
-void Move::Backward(int speed_rate)
+void Move::Backward(double speed_rate)
 {
     Wheel(LEFT_A_WHEEL, BACKWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
@@ -120,59 +120,59 @@ void Move::Backward(int speed_rate)
     Wheel(RIGHT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
 
     current_move = BACKWARD;    
-    current_speed_rate = speed_rate * global_speed_rate / 100.0;
+    current_speed_rate = speed_rate;
 }
 
 
 //向前左转
-void Move::ForLeftward(int speed_rate)
+void Move::ForLeftward(double speed_rate, double turn_speed_rate)
 {
-    Wheel(LEFT_A_WHEEL, FORWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
-    Wheel(LEFT_B_WHEEL, FORWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
+    Wheel(LEFT_A_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
+    Wheel(LEFT_B_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
     Wheel(RIGHT_A_WHEEL, FORWARD_ROTATION, speed_rate);
     Wheel(RIGHT_B_WHEEL, FORWARD_ROTATION, speed_rate);
 
     current_move = FORLEFTWARD;
-    current_speed_rate = speed_rate * global_speed_rate / 100.0;
+    current_speed_rate = speed_rate;
 }
 
 
 //向前右转
-void Move::ForRightward(int speed_rate)
+void Move::ForRightward(double speed_rate, double turn_speed_rate)
 {
     Wheel(LEFT_A_WHEEL, FORWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, FORWARD_ROTATION, speed_rate);
-    Wheel(RIGHT_A_WHEEL, FORWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
-    Wheel(RIGHT_B_WHEEL, FORWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
+    Wheel(RIGHT_A_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
+    Wheel(RIGHT_B_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
 
     current_move = FORRIGHTWARD;   
-    current_speed_rate = speed_rate * global_speed_rate / 100.0;
+    current_speed_rate = speed_rate;
 }
 
 
 //向后左转
-void Move::BackLeftward(int speed_rate)
+void Move::BackLeftward(double speed_rate, double turn_speed_rate)
 {
-    Wheel(LEFT_A_WHEEL, BACKWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
-    Wheel(LEFT_B_WHEEL, BACKWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
+    Wheel(LEFT_A_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
+    Wheel(LEFT_B_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
     Wheel(RIGHT_A_WHEEL, BACKWARD_ROTATION, speed_rate);
     Wheel(RIGHT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
 
     current_move = BACKLEFTWARD;    
-    current_speed_rate = speed_rate * global_speed_rate / 100.0;
+    current_speed_rate = speed_rate;
 }
 
 
 //向后右转
-void Move::BackRightward(int speed_rate)
+void Move::BackRightward(double speed_rate, double turn_speed_rate)
 {
     Wheel(LEFT_A_WHEEL, BACKWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
-    Wheel(RIGHT_A_WHEEL, BACKWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
-    Wheel(RIGHT_B_WHEEL, BACKWARD_ROTATION, TRUN_SPEED_RATE * speed_rate / 100.0);
+    Wheel(RIGHT_A_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
+    Wheel(RIGHT_B_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
 
     current_move = BACKRIGHTWARD;     
-    current_speed_rate = speed_rate * global_speed_rate / 100.0;    
+    current_speed_rate = speed_rate;    
 }
 
 
@@ -186,4 +186,20 @@ void Move::Stop(void)
 
     current_move = STOP;
     current_speed_rate = 0;
+}
+
+
+//向某方向运动
+void Move::MoveDirection(uint8_t direction, double speed_rate, double turn_speed_rate)
+{
+    switch (direction)
+    {
+    case FORWARD: Forward(speed_rate); break;
+    case BACKWARD: Backward(speed_rate); break;
+    case FORLEFTWARD: ForLeftward(speed_rate, turn_speed_rate); break;
+    case FORRIGHTWARD: ForRightward(speed_rate, turn_speed_rate); break;
+    case BACKLEFTWARD: BackLeftward(speed_rate, turn_speed_rate); break;
+    case BACKRIGHTWARD: BackRightward(speed_rate, turn_speed_rate); break;
+    case STOP: Stop();
+    }
 }

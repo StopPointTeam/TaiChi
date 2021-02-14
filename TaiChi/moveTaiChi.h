@@ -10,22 +10,22 @@
 //轮胎旋转方向定义，包括停止
 #define FORWARD_ROTATION 0
 #define BACKWARD_ROTATION 1
-#define STOP_ROTATION 3
+#define STOP_ROTATION 6
 
-//运动状态定义
+//运动方向、状态定义，与轮胎旋转方向定义兼容
 #define FORWARD 0
 #define BACKWARD 1
 #define FORLEFTWARD 2
-#define BACKLEFTWARD 3
-#define FORRIGHTWARD 4
+#define FORRIGHTWARD 3
+#define BACKLEFTWARD 4
 #define BACKRIGHTWARD 5
 #define STOP 6
 
 //默认全局速度比率
-#define DEFAULT_GLOBAL_SPEED_RATE 100
+#define DEFAULT_GLOBAL_SPEED_RATE 1.0
 
-//转向时一侧减速的比率
-#define TRUN_SPEED_RATE 50
+//默认转向时一侧减速的比率
+#define DEFAULT_TRUN_SPEED_RATE 0.5
 
 //左侧 L298N 接口定义
 #define LEFT_L298N_IN1 22
@@ -48,27 +48,29 @@ class Move
 {
 public:
     Move();
-    Move(int global_speed_rate);
+    Move(double global_speed_rate);
 
-    void SetGlobalSpeedRate(int global_speed_rate); //设置全局速度比率
+    void SetGlobalSpeedRate(double global_speed_rate); //设置全局速度比率
 
     uint8_t GetCurrentMove(void); //获取当前运动方向
-    int GetCurrentSpeedRate(void); //获取当前运动速度比率
+    double GetCurrentSpeedRate(void); //获取当前运动速度比率
 
-    void Wheel(uint8_t wheel, uint8_t rotation, int speed_rate = 100); //控制某个轮子转动
+    void Wheel(uint8_t wheel, uint8_t rotation, double speed_rate = 1.0); //控制某个轮子转动
 
-    void Forward(int speed_rate = 100); //前进
-    void Backward(int speed_rate = 100); //后退
-    void ForLeftward(int speed_rate = 100); //向前左转
-    void ForRightward(int speed_rate = 100); //向前右转
-    void BackLeftward(int speed_rate = 100); //向后左转
-    void BackRightward(int speed_rate = 100); //向后右转
+    void Forward(double speed_rate = 1.0); //前进
+    void Backward(double speed_rate = 1.0); //后退
+    void ForLeftward(double speed_rate = 1.0, double turn_speed_rate = DEFAULT_TRUN_SPEED_RATE); //向前左转
+    void ForRightward(double speed_rate = 1.0, double turn_speed_rate = DEFAULT_TRUN_SPEED_RATE); //向前右转
+    void BackLeftward(double speed_rate = 1.0, double turn_speed_rate = DEFAULT_TRUN_SPEED_RATE); //向后左转
+    void BackRightward(double speed_rate = 1.0, double turn_speed_rate = DEFAULT_TRUN_SPEED_RATE); //向后右转
     void Stop(void); //制动
 
+    void MoveDirection(uint8_t direction, double speed_rate = 1.0, double turn_speed_rate = DEFAULT_TRUN_SPEED_RATE); //向某方向运动
+
 private:
-    int global_speed_rate; //全局速度比率
+    double global_speed_rate; //全局速度比率
     uint8_t current_move; //当前运动状态
-    int current_speed_rate; //当前运动速度比率
+    double current_speed_rate; //当前运动速度比率
 };
 
 
