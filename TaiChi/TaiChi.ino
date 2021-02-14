@@ -32,6 +32,11 @@ int8_t route[][3] =
 
 
 //****************************************可调参数****************************************
+//抓取点移动用时
+#define CATCH_MOVE_DELAY_TIME 2000
+//释放点移动用时
+#define RELEASE_MOVE_DELAY_TIME 2000
+
 //重置留时
 #define RESET_DELAY_TIME 10000
 //抓取留时
@@ -295,13 +300,13 @@ void LineForward(uint8_t end_position, double speed_rate)
         }
         else if (end_position == CATCH_END) //到达抓取位置为止
         {
-            if (micros() - begin_time > 2000)
+            if (micros() - begin_time > CATCH_MOVE_DELAY_TIME)
                 break;
         }
         else //到达释放位置为止
         {
-            if (micros() - begin_time > 2000)
-                break;            
+            if (micros() - begin_time > RELEASE_MOVE_DELAY_TIME)
+                break;
         }
     }
 }
