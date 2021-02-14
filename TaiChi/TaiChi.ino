@@ -127,7 +127,7 @@ void loop()
         //继续沿线直行，到前端传感器接触下一条线为止
         LineForward(FRONT_END);
 
-        //继续直行或转向
+        //继续直行或后退或转向
         TurnDirection(CalcDirection());
 
         //抓取完成后，更新标记，将越过的点视为普通点，继续循环
