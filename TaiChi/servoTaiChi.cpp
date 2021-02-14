@@ -71,16 +71,17 @@ void Servo::StopActionGroup(void)
  * Return:       无返回
  * Others:
  *********************************************************************************/
-void Servo::SetActionGroupSpeed(uint8_t action_num, uint16_t speed)
+void Servo::SetActionGroupSpeed(uint8_t action_num, double speed)
 {
+    uint16_t speed_int = (uint16_t)speed;
     uint8_t buf[7];
     buf[0] = FRAME_HEADER; //填充帧头
     buf[1] = FRAME_HEADER;
     buf[2] = 5;                      //数据长度，数据帧除帧头部分数据字节数，此命令固定为5
     buf[3] = CMD_ACTION_GROUP_SPEED; //填充设置动作组速度命令
     buf[4] = action_num;            //填充要设置的动作组号
-    buf[5] = GET_LOW_BYTE(speed);    //获得目标速度的低八位
-    buf[6] = GET_HIGH_BYTE(speed);   //获得目标熟读的高八位
+    buf[5] = GET_LOW_BYTE(speed_int);    //获得目标速度的低八位
+    buf[6] = GET_HIGH_BYTE(speed_int);   //获得目标熟读的高八位
 
     SerialX->write(buf, 7); //发送数据帧
 }
@@ -93,14 +94,14 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, uint16_t speed)
  * Return:       无返回
  * Others:
  *********************************************************************************/
-void Servo::SetAllActionGroupSpeed(uint16_t speed)
+void Servo::SetAllActionGroupSpeed(double speed)
 {
     SetActionGroupSpeed(0xFF, speed); //调用动作组速度设定，组号为0xFF时设置所有组的速度
 }
 
 
 //恢复初始状态，指定速度
-void Servo::Reset(uint16_t speed)
+void Servo::Reset(double speed)
 {
     SetActionGroupSpeed(ACTION_RESET_NUM, speed);
     RunActionGroup(ACTION_RESET_NUM, 1);
@@ -109,7 +110,7 @@ void Servo::Reset(uint16_t speed)
 
 
 //抓取，指定速度
-void Servo::Catch(uint16_t speed)
+void Servo::Catch(double speed)
 {
     SetActionGroupSpeed(ACTION_CATCH_NUM, speed);
     RunActionGroup(ACTION_CATCH_NUM, 1);
@@ -118,7 +119,7 @@ void Servo::Catch(uint16_t speed)
 
 
 //释放，指定速度
-void Servo::Release(uint16_t speed)
+void Servo::Release(double speed)
 {
     SetActionGroupSpeed(ACTION_RELEASE_NUM, speed);
     RunActionGroup(ACTION_RELEASE_NUM, 1);
@@ -127,7 +128,7 @@ void Servo::Release(uint16_t speed)
 
 
 //停止舵机并恢复初始状态，指定速度
-void Servo::StopAndReset(uint16_t speed)
+void Servo::StopAndReset(double speed)
 {
     StopActionGroup();
     Reset(speed);

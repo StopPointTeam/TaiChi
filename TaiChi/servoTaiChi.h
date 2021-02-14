@@ -22,7 +22,7 @@
 
 
 //默认动作组速度
-#define SERVO_NORMAL_SPEED 100
+#define SERVO_NORMAL_SPEED 1.0
 
 
 class Servo
@@ -33,13 +33,13 @@ public:
 
     void RunActionGroup(uint8_t action_num, uint16_t times);
     void StopActionGroup(void);
-    void SetActionGroupSpeed(uint8_t action_num, uint16_t speed);
-    void SetAllActionGroupSpeed(uint16_t speed);
+    void SetActionGroupSpeed(uint8_t action_num, double speed);
+    void SetAllActionGroupSpeed(double speed);
 
-    void Reset(uint16_t speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
-    void Catch(uint16_t speed = SERVO_NORMAL_SPEED); //抓取，指定速度
-    void Release(uint16_t speed = SERVO_NORMAL_SPEED); //释放，指定速度
-    void StopAndReset(uint16_t speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
+    void Reset(double speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
+    void Catch(double speed = SERVO_NORMAL_SPEED); //抓取，指定速度
+    void Release(double speed = SERVO_NORMAL_SPEED); //释放，指定速度
+    void StopAndReset(double speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
 
 private:
     HardwareSerial *SerialX;
