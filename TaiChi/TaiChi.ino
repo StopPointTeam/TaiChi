@@ -203,29 +203,42 @@ uint8_t CalcDirection(void)
         rx = -ry0;
         ry = rx0;
     }
-
+    else return 254; //DEBUG
 
     //判断行进方向
     if (rx == 0 && ry == 2)
     {
         if (next_position == FRONT_NEXT)
         {
-            return FORWARD; //正对下一点
+            return FORWARD;
         }
         else
-        { 
-            return BACKWARD; //后退，背对下一点
+        {
+            return BACKWARD;
+        }
+    }
+    else if (rx == 0 && ry == 0)
+    {
+        if (next_position == FRONT_NEXT)
+        {
+            next_position = BACK_NEXT;
+            return BACKWARD;
+        }
+        else
+        {
+            next_position = FRONT_NEXT;
+            return FORWARD;
         }
     }
     else if (rx == -1 && ry == 1)
     {
         if (next_position == FRONT_NEXT)
         {
-            return FORLEFTWARD; //正对下一点
+            return FORLEFTWARD;
         }
         else
         {
-            next_position = FRONT_NEXT; //向左后退，正对下一点
+            next_position = FRONT_NEXT;
             return BACKLEFTWARD;
         }
     }
@@ -233,11 +246,11 @@ uint8_t CalcDirection(void)
     {
         if (next_position == FRONT_NEXT)
         {
-            return FORRIGHTWARD; //正对下一点
+            return FORRIGHTWARD;
         }
         else
         {
-            next_position = FRONT_NEXT; //向右后退，正对下一点
+            next_position = FRONT_NEXT;
             return BACKRIGHTWARD;
         }
     }
