@@ -316,7 +316,7 @@ void LineForward(uint8_t end_position, float speed_rate)
         }
         else //均不符合，则低速后退，尝试回到白线上
         {
-            move.Backward(50);
+            move.Backward(0.5);
         }
 
         if (end_position == FRONT_END) //前端接触线为止
@@ -374,7 +374,7 @@ void LineBackward(uint8_t end_position, float speed_rate)
         }
         else //均不符合，则低速前进，尝试回到白线上
         {
-            move.Forward(50);
+            move.Forward(0.5);
         }
 
 
