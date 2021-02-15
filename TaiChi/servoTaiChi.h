@@ -33,13 +33,13 @@ public:
 
     void RunActionGroup(uint8_t action_num, uint16_t times);
     void StopActionGroup(void);
-    void SetActionGroupSpeed(uint8_t action_num, double speed);
-    void SetAllActionGroupSpeed(double speed);
+    void SetActionGroupSpeed(uint8_t action_num, float speed);
+    void SetAllActionGroupSpeed(float speed);
 
-    void Reset(double speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
-    void Catch(double speed = SERVO_NORMAL_SPEED); //抓取，指定速度
-    void Release(double speed = SERVO_NORMAL_SPEED); //释放，指定速度
-    void StopAndReset(double speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
+    void Reset(float speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
+    void Catch(float speed = SERVO_NORMAL_SPEED); //抓取，指定速度
+    void Release(float speed = SERVO_NORMAL_SPEED); //释放，指定速度
+    void StopAndReset(float speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
 
 private:
     HardwareSerial *SerialX;

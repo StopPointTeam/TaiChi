@@ -11,7 +11,7 @@ Move::Move()
 }
 
 
-Move::Move(double global_speed_rate)
+Move::Move(float global_speed_rate)
 {
     Move();
     
@@ -20,7 +20,7 @@ Move::Move(double global_speed_rate)
 
 
 //设置全局速度比率
-void Move::SetGlobalSpeedRate(double global_speed_rate)
+void Move::SetGlobalSpeedRate(float global_speed_rate)
 {
     this->global_speed_rate = global_speed_rate;
 }
@@ -34,14 +34,14 @@ uint8_t Move::GetCurrentMove(void)
 
 
 //获取当前运动速度比率
-double Move::GetCurrentSpeedRate(void)
+float Move::GetCurrentSpeedRate(void)
 {
     return current_speed_rate;
 }
 
 
 //控制某个轮子转动
-void Move::Wheel(uint8_t wheel, uint8_t rotation, double speed_rate)
+void Move::Wheel(uint8_t wheel, uint8_t rotation, float speed_rate)
 {
     uint8_t pin_in1, pin_in2, pin_ena;
 
@@ -99,7 +99,7 @@ void Move::Wheel(uint8_t wheel, uint8_t rotation, double speed_rate)
 
 
 //前进
-void Move::Forward(double speed_rate)
+void Move::Forward(float speed_rate)
 {
     Wheel(LEFT_A_WHEEL, FORWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, FORWARD_ROTATION, speed_rate);
@@ -112,7 +112,7 @@ void Move::Forward(double speed_rate)
 
 
 //后退
-void Move::Backward(double speed_rate)
+void Move::Backward(float speed_rate)
 {
     Wheel(LEFT_A_WHEEL, BACKWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
@@ -125,7 +125,7 @@ void Move::Backward(double speed_rate)
 
 
 //向前左转
-void Move::ForLeftward(double speed_rate, double turn_speed_rate)
+void Move::ForLeftward(float speed_rate, float turn_speed_rate)
 {
     Wheel(LEFT_A_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
     Wheel(LEFT_B_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
@@ -138,7 +138,7 @@ void Move::ForLeftward(double speed_rate, double turn_speed_rate)
 
 
 //向前右转
-void Move::ForRightward(double speed_rate, double turn_speed_rate)
+void Move::ForRightward(float speed_rate, float turn_speed_rate)
 {
     Wheel(LEFT_A_WHEEL, FORWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, FORWARD_ROTATION, speed_rate);
@@ -151,7 +151,7 @@ void Move::ForRightward(double speed_rate, double turn_speed_rate)
 
 
 //向后左转
-void Move::BackLeftward(double speed_rate, double turn_speed_rate)
+void Move::BackLeftward(float speed_rate, float turn_speed_rate)
 {
     Wheel(LEFT_A_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
     Wheel(LEFT_B_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
@@ -164,7 +164,7 @@ void Move::BackLeftward(double speed_rate, double turn_speed_rate)
 
 
 //向后右转
-void Move::BackRightward(double speed_rate, double turn_speed_rate)
+void Move::BackRightward(float speed_rate, float turn_speed_rate)
 {
     Wheel(LEFT_A_WHEEL, BACKWARD_ROTATION, speed_rate);
     Wheel(LEFT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
@@ -190,7 +190,7 @@ void Move::Stop(void)
 
 
 //向某方向运动
-void Move::MoveDirection(uint8_t direction, double speed_rate, double turn_speed_rate)
+void Move::MoveDirection(uint8_t direction, float speed_rate, float turn_speed_rate)
 {
     switch (direction)
     {

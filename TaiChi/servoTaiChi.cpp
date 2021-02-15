@@ -71,7 +71,7 @@ void Servo::StopActionGroup(void)
  * Return:       无返回
  * Others:
  *********************************************************************************/
-void Servo::SetActionGroupSpeed(uint8_t action_num, double speed)
+void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
 {
     uint16_t speed_int = (uint16_t)speed;
     uint8_t buf[7];
@@ -94,14 +94,14 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, double speed)
  * Return:       无返回
  * Others:
  *********************************************************************************/
-void Servo::SetAllActionGroupSpeed(double speed)
+void Servo::SetAllActionGroupSpeed(float speed)
 {
     SetActionGroupSpeed(0xFF, speed); //调用动作组速度设定，组号为0xFF时设置所有组的速度
 }
 
 
 //恢复初始状态，指定速度
-void Servo::Reset(double speed)
+void Servo::Reset(float speed)
 {
     SetActionGroupSpeed(ACTION_RESET_NUM, speed);
     RunActionGroup(ACTION_RESET_NUM, 1);
@@ -110,7 +110,7 @@ void Servo::Reset(double speed)
 
 
 //抓取，指定速度
-void Servo::Catch(double speed)
+void Servo::Catch(float speed)
 {
     SetActionGroupSpeed(ACTION_CATCH_NUM, speed);
     RunActionGroup(ACTION_CATCH_NUM, 1);
@@ -119,7 +119,7 @@ void Servo::Catch(double speed)
 
 
 //释放，指定速度
-void Servo::Release(double speed)
+void Servo::Release(float speed)
 {
     SetActionGroupSpeed(ACTION_RELEASE_NUM, speed);
     RunActionGroup(ACTION_RELEASE_NUM, 1);
@@ -128,7 +128,7 @@ void Servo::Release(double speed)
 
 
 //停止舵机并恢复初始状态，指定速度
-void Servo::StopAndReset(double speed)
+void Servo::StopAndReset(float speed)
 {
     StopActionGroup();
     Reset(speed);

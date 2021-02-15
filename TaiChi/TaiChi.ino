@@ -87,13 +87,13 @@ uint8_t CalcDirection(void);
 #define CATCH_END 2
 #define RELEASE_END 3
 //沿线直行，在触发条件后停止
-void LineForward(uint8_t end_position, double speed_rate = 1.0);
+void LineForward(uint8_t end_position, float speed_rate = 1.0);
 
 //沿线后退，在触发条件后停止
-void LineBackward(uint8_t end_position, double speed_rate = 1.0);
+void LineBackward(uint8_t end_position, float speed_rate = 1.0);
 
 //直行或后退或转向
-void TurnDirection(uint8_t direction, double speed_rate = 1.0);
+void TurnDirection(uint8_t direction, float speed_rate = 1.0);
 //***************************************************************************************
 
 
@@ -280,7 +280,7 @@ uint8_t CalcDirection(void)
 
 
 //沿线直行，在触发条件后停止
-void LineForward(uint8_t end_position, double speed_rate)
+void LineForward(uint8_t end_position, float speed_rate)
 {
     //记录开始时间
     unsigned long begin_time = micros();
@@ -329,7 +329,7 @@ void LineForward(uint8_t end_position, double speed_rate)
 
 
 //沿线后退，在触发条件后停止
-void LineBackward(uint8_t end_position, double speed_rate)
+void LineBackward(uint8_t end_position, float speed_rate)
 {
     while(1)
     {
@@ -366,7 +366,7 @@ void LineBackward(uint8_t end_position, double speed_rate)
 
 
 //直行或后退或转向
-void TurnDirection(uint8_t direction, double speed_rate)
+void TurnDirection(uint8_t direction, float speed_rate)
 {    
     if (direction == FORWARD) //继续直行
     {
