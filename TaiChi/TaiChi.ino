@@ -99,7 +99,7 @@ void LineForward(uint8_t end_position, float speed_rate = 1.0);
 void LineBackward(uint8_t end_position, float speed_rate = 1.0);
 
 //直行或后退或转向
-void TurnDirection(uint8_t direction, float speed_rate = 1.0);
+void TurnDirection(float speed_rate = 1.0);
 //***************************************************************************************
 
 
@@ -149,7 +149,7 @@ void loop()
         }
 
         //继续直行或后退或转向
-        TurnDirection(CalcDirection());
+        TurnDirection();
     }
     //情况二：刚完整经过普通点，下一个点为抓取点
     else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == CATCH_POINT)
@@ -165,7 +165,7 @@ void loop()
         LineForward(FRONT_END);
 
         //继续直行或后退或转向
-        TurnDirection(CalcDirection());
+        TurnDirection();
 
         //抓取完成后，将越过的点视为普通点
         route[next_flag][TYPE] = NORMAL_POINT;
@@ -194,7 +194,7 @@ void loop()
         delay(RESET_DELAY_TIME); //复原留时
 
         //继续后退或转向
-        TurnDirection(CalcDirection());
+        TurnDirection();
     }
     //出现错误
     else 
@@ -427,8 +427,10 @@ void LineBackward(uint8_t end_position, float speed_rate)
 
 
 //直行或后退或转向
-void TurnDirection(uint8_t direction, float speed_rate)
+void TurnDirection(float speed_rate)
 {    
+    uint8_t direction = CalcDirection();
+    
     #ifdef TAICHI_DEBUG
     //调试输出直行或后退或转向状态
     Serial.print("#TAICHI: Turn Direction");
