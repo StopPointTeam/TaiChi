@@ -1,18 +1,18 @@
 #include "servoTaiChi.h"
 
 
-#define GET_LOW_BYTE(A) (uint8_t)((A))
 //宏函数 获得A的低八位
-#define GET_HIGH_BYTE(A) (uint8_t)((A) >> 8)
+#define GET_LOW_BYTE(A) (uint8_t)((A))
 //宏函数 获得A的高八位
-#define BYTE_TO_HW(A, B) ((((uint16_t)(A)) << 8) | (uint8_t)(B))
+#define GET_HIGH_BYTE(A) (uint8_t)((A) >> 8)
 //宏函数 以A为高八位 B为低八位 合并为16位整形
+#define BYTE_TO_HW(A, B) ((((uint16_t)(A)) << 8) | (uint8_t)(B))
 
 
 Servo::Servo()
 {
     SerialX = &Serial1; //默认使用 Mega 板 18 19 作为串口通信端口
-    SerialX->begin(BAUD_RATE);
+    SerialX->begin(SERVO_BAUD_RATE);
 }
 
 
@@ -20,17 +20,13 @@ Servo::Servo()
 Servo::Servo(HardwareSerial& serial_num)
 {
     SerialX = &serial_num;
-    SerialX->begin(BAUD_RATE);
+    SerialX->begin(SERVO_BAUD_RATE);
 }
 
 
-/*********************************************************************************
- * Function:  RunActionGroup
- * Description： 运行指定动作组
- * Parameters:   action_num:动作组序号, times:执行次数
- * Return:       无返回
- * Others:       times = 0 时无限循环
- *********************************************************************************/
+//运行指定动作组
+//action_num: 动作组序号, times: 执行次数
+//times = 0 时无限循环
 void Servo::RunActionGroup(uint8_t action_num, uint16_t times)
 {
     uint8_t buf[7];
@@ -45,13 +41,7 @@ void Servo::RunActionGroup(uint8_t action_num, uint16_t times)
 }
 
 
-/*********************************************************************************
- * Function:  StopActionGroup
- * Description： 停止动作组运行
- * Parameters:   speed: 目标速度
- * Return:       无返回
- * Others:
- *********************************************************************************/
+//停止动作组运行
 void Servo::StopActionGroup(void)
 {
     uint8_t buf[4];
@@ -64,16 +54,11 @@ void Servo::StopActionGroup(void)
 }
 
 
-/*********************************************************************************
- * Function:  SetActionGroupSpeed
- * Description： 设定指定动作组的运行速度
- * Parameters:   action_num: 动作组序号 , speed:目标速度
- * Return:       无返回
- * Others:
- *********************************************************************************/
+//设定指定动作组的运行速度
+//action_num: 动作组序号, speed: 目标速度
 void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
 {
-    uint16_t speed_int = (uint16_t)speed;
+    uint16_t speed_int = (uint16_t)(speed * 100.0);
     uint8_t buf[7];
     buf[0] = FRAME_HEADER; //填充帧头
     buf[1] = FRAME_HEADER;
@@ -87,13 +72,8 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
 }
 
 
-/*********************************************************************************
- * Function:  SetAllActionGroupSpeed
- * Description： 设置所有动作组的运行速度
- * Parameters:   speed: 目标速度
- * Return:       无返回
- * Others:
- *********************************************************************************/
+//设置所有动作组的运行速度
+//speed: 目标速度
 void Servo::SetAllActionGroupSpeed(float speed)
 {
     SetActionGroupSpeed(0xFF, speed); //调用动作组速度设定，组号为0xFF时设置所有组的速度

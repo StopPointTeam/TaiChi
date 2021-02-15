@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 
-#define BAUD_RATE 9600
+#define SERVO_BAUD_RATE 9600
 
 
 //发送部分的指令
@@ -29,12 +29,12 @@ class Servo
 {
 public:
     Servo();
-    Servo(HardwareSerial &serial_num);
+    Servo(HardwareSerial &serial_num); //构造函数，指定串口通信端口
 
-    void RunActionGroup(uint8_t action_num, uint16_t times);
-    void StopActionGroup(void);
-    void SetActionGroupSpeed(uint8_t action_num, float speed);
-    void SetAllActionGroupSpeed(float speed);
+    void RunActionGroup(uint8_t action_num, uint16_t times); //运行指定动作组
+    void StopActionGroup(void); //停止动作组运行
+    void SetActionGroupSpeed(uint8_t action_num, float speed); //设定指定动作组的运行速度
+    void SetAllActionGroupSpeed(float speed); //设置所有动作组的运行速度
 
     void Reset(float speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
     void Catch(float speed = SERVO_NORMAL_SPEED); //抓取，指定速度
