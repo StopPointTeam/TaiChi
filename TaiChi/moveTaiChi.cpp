@@ -43,7 +43,7 @@ float Move::GetCurrentSpeedRate(void)
 //控制某个轮子转动
 void Move::Wheel(uint8_t wheel, uint8_t rotation, float speed_rate)
 {
-    uint8_t pin_in1, pin_in2, pin_ena;
+    uint8_t pin_in1, pin_in2, pin_enx;
 
     switch (wheel)
     {
@@ -51,28 +51,28 @@ void Move::Wheel(uint8_t wheel, uint8_t rotation, float speed_rate)
     {
         pin_in1 = LEFT_L298N_IN1;
         pin_in2 = LEFT_L298N_IN2;
-        pin_ena = LEFT_L298N_ENA;
+        pin_enx = LEFT_L298N_ENA;
     } break;
 
     case LEFT_B_WHEEL:
     {
         pin_in1 = LEFT_L298N_IN3;
         pin_in2 = LEFT_L298N_IN4;
-        pin_ena = LEFT_L298N_ENB;
+        pin_enx = LEFT_L298N_ENB;
     } break; 
 
     case RIGHT_A_WHEEL:
     {
         pin_in1 = RIGHT_L298N_IN1;
         pin_in2 = RIGHT_L298N_IN2;
-        pin_ena = RIGHT_L298N_ENA;
+        pin_enx = RIGHT_L298N_ENA;
     } break;
 
     case RIGHT_B_WHEEL:
     {
         pin_in1 = RIGHT_L298N_IN3;
         pin_in2 = RIGHT_L298N_IN4;
-        pin_ena = RIGHT_L298N_ENB;
+        pin_enx = RIGHT_L298N_ENB;
     }
     }
 
@@ -83,7 +83,7 @@ void Move::Wheel(uint8_t wheel, uint8_t rotation, float speed_rate)
         return; //结束函数
     }
     
-    analogWrite(pin_ena, speed_rate * global_speed_rate * 255.0); //设置 PWM 波，即转速
+    analogWrite(pin_enx, speed_rate * global_speed_rate * 255.0); //设置 PWM 波，即转速
 
     if (rotation == FORWARD_ROTATION) //向前转动
     {
