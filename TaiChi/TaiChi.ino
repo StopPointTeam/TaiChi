@@ -164,7 +164,7 @@ void loop()
         TurnDirection(CalcDirection());
 
         //抓取完成后，将越过的点视为普通点
-        route[passed_flag][TYPE] = NORMAL_POINT;
+        route[next_flag][TYPE] = NORMAL_POINT;
     }
     //情况三：刚完整经过普通点，下一个点为释放点
     else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == RELEASE_POINT)
@@ -192,7 +192,21 @@ void loop()
         //继续后退或转向
         TurnDirection(CalcDirection());
     }
-    else move.Stop(); //调试用
+    //出现错误
+    else 
+    {
+        move.Stop();
+
+        #ifdef TAICHI_DEBUG
+        Serial.println("#TAICHI: FAIL TO RUN NEW LOOP!");
+        Serial.print("#TAICHI: passed_flag: "); Serial.println(passed_flag);
+        Serial.print("#TAICHI: next_position: "); Serial.println((int)next_position);
+        Serial.print("#TAICHI: passed_flag TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
+        Serial.print("#TAICHI: next_flag TYPE: "); Serial.println((int)route[next_flag][TYPE]);
+        #endif
+
+        while (1) {}
+    }
 
     //更新标记，继续循环
     if (++passed_flag > max_flag)
