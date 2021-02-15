@@ -79,7 +79,7 @@ uint8_t next_position = FRONT_NEXT;
 
 
 //****************************************自定函数****************************************
-//计算方向
+//计算方向，同时更改完成转向后相对下一点的朝向
 uint8_t CalcDirection(void);
 
 #define FRONT_END 0
@@ -116,11 +116,9 @@ void setup()
 void loop()
 {
     //情况一：刚完整经过普通点，下一个点为普通点
-    if (route[passed_flag][TYPE] == NORMAL_POINT && route[passed_flag + 1][TYPE] == NORMAL_POINT)   
+    if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == NORMAL_POINT)   
     {
-        uint8_t direction = CalcDirection();
-
-        if (direction == FORWARD || direction == FORLEFTWARD || direction == FORRIGHTWARD)
+        if (next_position == FRONT_NEXT)
         {
             //沿线直行，到前端传感器接触下一条线为止
             LineForward(FRONT_END);
@@ -132,10 +130,10 @@ void loop()
         }
 
         //继续直行或后退或转向
-        TurnDirection(direction);
+        TurnDirection(CalcDirection());
     }
     //情况二：刚完整经过普通点，下一个点为抓取点
-    else if (route[passed_flag][TYPE] == NORMAL_POINT && route[passed_flag + 1][TYPE] == CATCH_POINT)
+    else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == CATCH_POINT)
     {
         //沿线直行，在抓取位置停止
         LineForward(CATCH_END);
@@ -154,7 +152,7 @@ void loop()
         route[passed_flag][TYPE] = NORMAL_POINT;
     }
     //情况三：刚完整经过普通点，下一个点为释放点
-    else if (route[passed_flag][TYPE] == NORMAL_POINT && route[passed_flag + 1][TYPE] == RELEASE_POINT)
+    else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == RELEASE_POINT)
     {
         //沿线直行，在释放位置停止
         LineForward(RELEASE_END);
@@ -167,10 +165,8 @@ void loop()
         next_position = BACK_NEXT;
     }
     //情况四：刚完整经过释放点，下一个点为普通点
-    else if (route[passed_flag][TYPE] == RELEASE_POINT && route[passed_flag + 1][TYPE] == NORMAL_POINT)
+    else if (route[passed_flag][TYPE] == RELEASE_POINT && route[next_flag][TYPE] == NORMAL_POINT)
     {
-        uint8_t direction = CalcDirection();
-        
         //沿线后退，到后端传感器接触下一条线为止
         LineBackward(BACK_END);
 
@@ -179,7 +175,7 @@ void loop()
         delay(RESET_DELAY_TIME); //复原留时
 
         //继续后退或转向
-        TurnDirection(direction);
+        TurnDirection(CalcDirection());
     }
     else move.Stop(); //DEBUG
 
@@ -195,7 +191,7 @@ void loop()
 }
 
 
-//计算方向
+//计算方向，同时更改完成转向后相对下一点的朝向
 uint8_t CalcDirection(void)
 {
     //计算第三点与第一点的相对坐标 rx0, ry0
@@ -287,7 +283,7 @@ uint8_t CalcDirection(void)
 void LineForward(uint8_t end_position, double speed_rate)
 {
     //记录开始时间
-    int begin_time = micros();
+    unsigned long begin_time = micros();
 
     while(1)
     {
