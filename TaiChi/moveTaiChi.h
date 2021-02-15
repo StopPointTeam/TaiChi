@@ -1,6 +1,11 @@
 #ifndef MOVETAICHI_H
 #define MOVETAICHI_H
 
+
+//注释以关闭调试功能
+#define DEBUG
+
+
 //轮胎定义
 #define LEFT_A_WHEEL 0
 #define LEFT_B_WHEEL 1

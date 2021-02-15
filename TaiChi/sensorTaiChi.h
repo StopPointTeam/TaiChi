@@ -1,7 +1,10 @@
 #ifndef SENSORTAICHI_H
 #define SENSORTAICHI_H
 
+
+//注释以关闭调试功能
 #define DEBUG
+
 
 //灰度传感器接口定义
 #define GRAY_1_OUT A0

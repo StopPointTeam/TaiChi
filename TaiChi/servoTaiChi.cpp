@@ -37,7 +37,14 @@ void Servo::RunActionGroup(uint8_t action_num, uint16_t times)
     buf[4] = action_num;          //填充要运行的动作组号
     buf[5] = GET_LOW_BYTE(times);  //取得要运行次数的低八位
     buf[6] = GET_HIGH_BYTE(times); //取得要运行次数的高八位
+
     SerialX->write(buf, 7);        //发送数据帧
+
+    #ifdef DEBUG
+    //调试输出动作组执行信息
+    Serial.print("RunServoActionGroup: ");
+    Serial.println((int)action_num);
+    #endif
 }
 
 
@@ -51,6 +58,11 @@ void Servo::StopActionGroup(void)
     buf[3] = CMD_ACTION_GROUP_STOP; //填充停止运行动作组命令
 
     SerialX->write(buf, 4); //发送数据帧
+
+    #ifdef DEBUG
+    //调试输出动作组停止信息
+    Serial.print("StopServoActionGroup\n");
+    #endif
 }
 
 
@@ -69,6 +81,14 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
     buf[6] = GET_HIGH_BYTE(speed_int);   //获得目标熟读的高八位
 
     SerialX->write(buf, 7); //发送数据帧
+
+    #ifdef DEBUG
+    //调试输出动作组速度设定信息
+    Serial.print("SetServoActionGroupSpeed: ");
+    Serial.println((int)action_num);
+    Serial.print(" Speed: ");
+    Serial.println(speed);
+    #endif
 }
 
 

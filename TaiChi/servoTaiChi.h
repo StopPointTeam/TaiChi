@@ -5,6 +5,10 @@
 #include <Arduino.h>
 
 
+//注释以关闭调试功能
+#define DEBUG
+
+
 #define SERVO_BAUD_RATE 9600
 
 
