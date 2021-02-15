@@ -85,7 +85,6 @@ void Servo::Reset(float speed)
 {
     SetActionGroupSpeed(ACTION_RESET_NUM, speed);
     RunActionGroup(ACTION_RESET_NUM, 1);
-    SetActionGroupSpeed(ACTION_RESET_NUM, SERVO_NORMAL_SPEED);
 }
 
 
@@ -94,7 +93,6 @@ void Servo::Catch(float speed)
 {
     SetActionGroupSpeed(ACTION_CATCH_NUM, speed);
     RunActionGroup(ACTION_CATCH_NUM, 1);
-    SetActionGroupSpeed(ACTION_CATCH_NUM, SERVO_NORMAL_SPEED);
 }
 
 
@@ -103,7 +101,6 @@ void Servo::Release(float speed)
 {
     SetActionGroupSpeed(ACTION_RELEASE_NUM, speed);
     RunActionGroup(ACTION_RELEASE_NUM, 1);
-    SetActionGroupSpeed(ACTION_RELEASE_NUM, SERVO_NORMAL_SPEED);
 }
 
 
