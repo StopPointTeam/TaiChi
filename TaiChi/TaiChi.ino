@@ -63,6 +63,8 @@ int8_t route[][3] =
 
 //修正循迹时单侧减速比率
 #define LINE_FIX_SPEED_RATE 0.8
+//低速重新寻线时减速比率
+#define LINE_FIND_SPEED_RATE 0.5
 //***************************************************************************************
 
 
@@ -325,7 +327,7 @@ void LineForward(uint8_t end_position, float speed_rate)
         }
         else //均不符合，则低速后退，尝试回到白线上
         {
-            move.Backward(0.5);
+            move.Backward(LINE_FIND_SPEED_RATE);
         }
 
         if (end_position == FRONT_END) //前端接触线为止
@@ -383,7 +385,7 @@ void LineBackward(uint8_t end_position, float speed_rate)
         }
         else //均不符合，则低速前进，尝试回到白线上
         {
-            move.Forward(0.5);
+            move.Forward(LINE_FIND_SPEED_RATE);
         }
 
 
