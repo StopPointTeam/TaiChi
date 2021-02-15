@@ -128,6 +128,10 @@ void loop()
 {
     #ifdef TAICHI_DEBUG
     Serial.println("#TAICHI: ====================New loop()====================");
+    Serial.print("#TAICHI: passed_flag: "); Serial.println(passed_flag);
+    Serial.print("#TAICHI: next_position: "); Serial.println((int)next_position);
+    Serial.print("#TAICHI: passed_flag TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
+    Serial.print("#TAICHI: next_flag TYPE: "); Serial.println((int)route[next_flag][TYPE]);
     #endif
 
     //情况一：刚完整经过普通点，下一个点为普通点
