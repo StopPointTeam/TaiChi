@@ -104,7 +104,8 @@ void TurnDirection(uint8_t direction, float speed_rate = 1.0);
 void setup() 
 {
     #ifdef TAICHI_DEBUG
-    Serial.begin(9600);
+    Serial.begin(115200);
+    Serial.println("#TAICHI: ======================setup()=====================");
     #endif
 
     move.Stop();
@@ -123,6 +124,10 @@ void setup()
 
 void loop()
 {
+    #ifdef TAICHI_DEBUG
+    Serial.println("#TAICHI: ====================New loop()====================");
+    #endif
+
     //情况一：刚完整经过普通点，下一个点为普通点
     if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == NORMAL_POINT)   
     {
@@ -196,6 +201,10 @@ void loop()
 
     if (++next_next_flag > max_flag)
         next_next_flag = 0;
+
+    #ifdef TAICHI_DEBUG
+    Serial.println("#TAICHI: ====================End loop()====================");
+    #endif
 }
 
 
