@@ -109,9 +109,9 @@ void Move::Forward(float speed_rate)
     current_move = FORWARD;
     current_speed_rate = speed_rate;
 
-    #ifdef DEBUG
+    #ifdef MOVE_DEBUG
     //调试输出前进状态
-    Serial.print("Move Forward");
+    Serial.print("#MOVE:   Move Forward");
     Serial.print(" speed_rate: ");
     Serial.println(speed_rate);
     #endif
@@ -129,9 +129,9 @@ void Move::Backward(float speed_rate)
     current_move = BACKWARD;    
     current_speed_rate = speed_rate;
 
-    #ifdef DEBUG
+    #ifdef MOVE_DEBUG
     //调试输出后退状态
-    Serial.print("Move Backward");
+    Serial.print("#MOVE:   Move Backward");
     Serial.print(" speed_rate: ");
     Serial.println(speed_rate);
     #endif
@@ -149,9 +149,9 @@ void Move::ForLeftward(float speed_rate, float turn_speed_rate)
     current_move = FORLEFTWARD;
     current_speed_rate = speed_rate;
 
-    #ifdef DEBUG
+    #ifdef MOVE_DEBUG
     //调试输出向前左转状态
-    Serial.print("Move ForLeftward");
+    Serial.print("#MOVE:   Move ForLeftward");
     Serial.print(" speed_rate: ");
     Serial.println(speed_rate);
     #endif
@@ -169,9 +169,9 @@ void Move::ForRightward(float speed_rate, float turn_speed_rate)
     current_move = FORRIGHTWARD;   
     current_speed_rate = speed_rate;
 
-    #ifdef DEBUG
+    #ifdef MOVE_DEBUG
     //调试输出向前右转状态
-    Serial.print("Move ForRightward");
+    Serial.print("#MOVE:   Move ForRightward");
     Serial.print(" speed_rate: ");
     Serial.println(speed_rate);
     #endif
@@ -189,9 +189,9 @@ void Move::BackLeftward(float speed_rate, float turn_speed_rate)
     current_move = BACKLEFTWARD;    
     current_speed_rate = speed_rate;
 
-    #ifdef DEBUG
+    #ifdef MOVE_DEBUG
     //调试输出向后左转状态
-    Serial.print("Move BackLeftward");
+    Serial.print("#MOVE:   Move BackLeftward");
     Serial.print(" speed_rate: ");
     Serial.println(speed_rate);
     #endif
@@ -209,9 +209,9 @@ void Move::BackRightward(float speed_rate, float turn_speed_rate)
     current_move = BACKRIGHTWARD;     
     current_speed_rate = speed_rate;
 
-    #ifdef DEBUG
+    #ifdef MOVE_DEBUG
     //调试输出向后右转状态
-    Serial.print("Move BackRightward");
+    Serial.print("#MOVE:   Move BackRightward");
     Serial.print(" speed_rate: ");
     Serial.println(speed_rate);
     #endif
@@ -229,9 +229,9 @@ void Move::Stop(void)
     current_move = STOP;
     current_speed_rate = 0;
 
-    #ifdef DEBUG
+    #ifdef MOVE_DEBUG
     //调试输出制动状态
-    Serial.print("Move Stop\n");
+    Serial.println("#MOVE:   Move Stop");
     #endif
 }
 

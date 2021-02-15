@@ -3,7 +3,7 @@
 
 
 //注释以关闭调试功能
-#define DEBUG
+#define MOVE_DEBUG
 
 
 //轮胎定义

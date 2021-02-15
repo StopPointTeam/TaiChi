@@ -40,9 +40,9 @@ void Servo::RunActionGroup(uint8_t action_num, uint16_t times)
 
     SerialX->write(buf, 7);        //发送数据帧
 
-    #ifdef DEBUG
+    #ifdef SERVO_DEBUG
     //调试输出动作组执行信息
-    Serial.print("RunServoActionGroup: ");
+    Serial.print("#SERVO:  RunServoActionGroup: ");
     Serial.println((int)action_num);
     #endif
 }
@@ -59,9 +59,9 @@ void Servo::StopActionGroup(void)
 
     SerialX->write(buf, 4); //发送数据帧
 
-    #ifdef DEBUG
+    #ifdef SERVO_DEBUG
     //调试输出动作组停止信息
-    Serial.print("StopServoActionGroup\n");
+    Serial.println("#SERVO:  StopServoActionGroup");
     #endif
 }
 
@@ -82,10 +82,10 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
 
     SerialX->write(buf, 7); //发送数据帧
 
-    #ifdef DEBUG
+    #ifdef SERVO_DEBUG
     //调试输出动作组速度设定信息
-    Serial.print("SetServoActionGroupSpeed: ");
-    Serial.println((int)action_num);
+    Serial.print("#SERVO:  SetServoActionGroupSpeed: ");
+    Serial.print((int)action_num);
     Serial.print(" Speed: ");
     Serial.println(speed);
     #endif

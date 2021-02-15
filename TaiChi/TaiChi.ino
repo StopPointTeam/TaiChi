@@ -3,6 +3,10 @@
 #include "servoTaiChi.h" //舵机库
 
 
+//注释以关闭调试功能
+#define TAICHI_DEBUG
+
+
 Move move; //轮胎运动实例
 Sensor sensor; //传感器实例
 Servo servo; //舵机实例
@@ -99,6 +103,10 @@ void TurnDirection(uint8_t direction, float speed_rate = 1.0);
 
 void setup() 
 {
+    #ifdef TAICHI_DEBUG
+    Serial.begin(9600);
+    #endif
+
     move.Stop();
     servo.StopAndReset();
 
@@ -177,7 +185,7 @@ void loop()
         //继续后退或转向
         TurnDirection(CalcDirection());
     }
-    else move.Stop(); //DEBUG
+    else move.Stop(); //调试用
 
     //更新标记，继续循环
     if (++passed_flag > max_flag)
@@ -224,7 +232,7 @@ uint8_t CalcDirection(void)
         rx = -ry0;
         ry = rx0;
     }
-    else return 254; //DEBUG
+    else return 254; //调试用
 
     //判断行进方向
     if (rx == 0 && ry == 2)
@@ -275,13 +283,20 @@ uint8_t CalcDirection(void)
             return BACKRIGHTWARD;
         }
     }
-    else return 255; //DEBUG
+    else return 255; //调试用
 }
 
 
 //沿线直行，在触发条件后停止
 void LineForward(uint8_t end_position, float speed_rate)
 {
+    #ifdef TAICHI_DEBUG
+    //调试输出沿线直行状态
+    Serial.print("#TAICHI: Line Forward");
+    Serial.print(" end_position: ");
+    Serial.println((int)end_position);
+    #endif
+
     //记录开始时间
     unsigned long begin_time = micros();
 
@@ -325,12 +340,24 @@ void LineForward(uint8_t end_position, float speed_rate)
                 break;
         }
     }
+
+    #ifdef TAICHI_DEBUG
+    //调试输出沿线直行结束
+    Serial.println("#TAICHI: End Line Forward");
+    #endif
 }
 
 
 //沿线后退，在触发条件后停止
 void LineBackward(uint8_t end_position, float speed_rate)
 {
+    #ifdef TAICHI_DEBUG
+    //调试输出沿线后退状态
+    Serial.print("#TAICHI: Line Backward");
+    Serial.print(" end_position: ");
+    Serial.println((int)end_position);
+    #endif
+
     while(1)
     {
         if (!sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //左侧越线
@@ -361,13 +388,25 @@ void LineBackward(uint8_t end_position, float speed_rate)
             if (sensor.IsWhite(GRAY_5) && sensor.IsWhite(GRAY_6))
                 break;
         }      
-    }    
+    }
+
+    #ifdef TAICHI_DEBUG
+    //调试输出沿线后退结束
+    Serial.println("#TAICHI: End Line Backward");
+    #endif
 }
 
 
 //直行或后退或转向
 void TurnDirection(uint8_t direction, float speed_rate)
 {    
+    #ifdef TAICHI_DEBUG
+    //调试输出直行或后退或转向状态
+    Serial.print("#TAICHI: Turn Direction");
+    Serial.print(" direction: ");
+    Serial.println((int)direction);
+    #endif
+    
     if (direction == FORWARD) //继续直行
     {
         //沿线直行，到后端传感器接触线为止
@@ -386,4 +425,9 @@ void TurnDirection(uint8_t direction, float speed_rate)
         delay(TRUN_CHECK_DELAY); //延时后判断
         while(!(sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4))) {}
     }
+
+    #ifdef TAICHI_DEBUG
+    //调试输出直行或后退或转向结束
+    Serial.println("#TAICHI: End Turn Direction");
+    #endif
 }

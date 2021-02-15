@@ -27,16 +27,16 @@ bool Sensor::IsWhite(uint8_t gray_sensor_num)
 
     gray_val = analogRead(gray_out_pin);
 
-    #ifdef DEBUG
+    #ifdef SENSOR_DEBUG
     //调试输出灰度值
     switch (gray_sensor_num)
     {
-    case GRAY_1: Serial.print("GRAY_1: "); break;
-    case GRAY_2: Serial.print("GRAY_2: "); break;
-    case GRAY_3: Serial.print("GRAY_3: "); break;
-    case GRAY_4: Serial.print("GRAY_4: "); break;
-    case GRAY_5: Serial.print("GRAY_5: "); break;
-    case GRAY_6: Serial.print("GRAY_6: ");
+    case GRAY_1: Serial.print("#SENSOR: GRAY_1: "); break;
+    case GRAY_2: Serial.print("#SENSOR: GRAY_2: "); break;
+    case GRAY_3: Serial.print("#SENSOR: GRAY_3: "); break;
+    case GRAY_4: Serial.print("#SENSOR: GRAY_4: "); break;
+    case GRAY_5: Serial.print("#SENSOR: GRAY_5: "); break;
+    case GRAY_6: Serial.print("#SENSOR: GRAY_6: ");
     }
 
     Serial.println(gray_val);
@@ -59,15 +59,15 @@ bool Sensor::IsPushed(uint8_t button_num)
 
     button_val = digitalRead(button_out_pin);
 
-    #ifdef DEBUG
+    #ifdef SENSOR_DEBUG
     //调试输出按钮状态
     if (button_num == BUTTON_1)
-        Serial.print("BUTTON_1: ");
-    else Serial.print("BUTTON_2: ");
+        Serial.print("#SENSOR: BUTTON_1: ");
+    else Serial.print("#SENSOR: BUTTON_2: ");
 
     if (button_val == LOW)
-        Serial.print("pushed\n");
-    else Serial.print("released\n");
+        Serial.println("pushed");
+    else Serial.println("released");
     #endif    
 
     if (button_val == LOW)

@@ -6,7 +6,7 @@
 
 
 //注释以关闭调试功能
-#define DEBUG
+#define SERVO_DEBUG
 
 
 #define SERVO_BAUD_RATE 9600
