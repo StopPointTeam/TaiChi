@@ -9,6 +9,7 @@
 
 #ifdef TAICHI_DEBUG
 
+#define DEBUG_BAUT_RATE 115200
 #define DEBUG_PAUSE_INTERRUPTNUM 2 //PIN 21
 #define DEBUG_PAUSE_PIN 21
 //中断函数，用于调试时暂停程序
@@ -120,7 +121,7 @@ void setup()
 {
     #ifdef TAICHI_DEBUG
     attachInterrupt(DEBUG_PAUSE_INTERRUPTNUM, DebugPause, LOW);
-    Serial.begin(115200);
+    Serial.begin(DEBUG_BAUT_RATE);
     Serial.println("#TAICHI: ======================setup()=====================");
     #endif
 
