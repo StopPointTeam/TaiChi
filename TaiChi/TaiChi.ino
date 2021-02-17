@@ -3,8 +3,21 @@
 #include "servoTaiChi.h" //舵机库
 
 
+//****************************************调试相关****************************************
 //注释以关闭调试功能
 #define TAICHI_DEBUG
+
+#ifdef TAICHI_DEBUG
+
+#define DEBUG_PAUSE_INTERRUPTNUM 2 //PIN 21
+#define DEBUG_PAUSE_PIN 21
+//中断函数，用于调试时暂停程序
+void DebugPause(void)
+{
+    while (digitalRead(DEBUG_PAUSE_PIN) == LOW) {}
+}
+#endif
+//***************************************************************************************
 
 
 Move move; //轮胎运动实例
@@ -103,9 +116,10 @@ void TurnDirection(float speed_rate = 1.0);
 //***************************************************************************************
 
 
-void setup() 
+void setup()
 {
     #ifdef TAICHI_DEBUG
+    attachInterrupt(DEBUG_PAUSE_INTERRUPTNUM, DebugPause, LOW);
     Serial.begin(115200);
     Serial.println("#TAICHI: ======================setup()=====================");
     #endif
@@ -127,7 +141,10 @@ void setup()
 void loop()
 {
     #ifdef TAICHI_DEBUG
+    static int loop_time = 0;
+    loop_time++;
     Serial.println("#TAICHI: ====================New loop()====================");
+    Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
     Serial.print("#TAICHI: passed_flag: "); Serial.println(passed_flag);
     Serial.print("#TAICHI: next_position: "); Serial.println((int)next_position);
     Serial.print("#TAICHI: passed_flag TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
