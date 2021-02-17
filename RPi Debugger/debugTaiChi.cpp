@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <errno.h>
 #include <time.h>
@@ -26,12 +27,21 @@ using namespace std;
 
 
 int fd; //串口
+ofstream fileout; //文件
+
+
+static void SendDebugPause(int siginal) ;
+static void SendDebugContinue(int siginal);
+static void SendDebugReset(int siginal);
+string GetStrTime(void);
+string GetStrFullTime(void);
 
 
 //向 Arduino 发送暂停命令
 static void SendDebugPause(int siginal)
 {
     digitalWrite(DEBUG_GPIO, LOW);
+    fileout << "Pause in: " << GetStrFullTime() << endl;
 }
 
 
@@ -40,20 +50,26 @@ static void SendDebugContinue(int siginal)
 {
     digitalWrite(DEBUG_GPIO, HIGH);
     cout << '\n';
+    fileout << "Start in: " << GetStrFullTime() << endl;
 }
 
 
-//向 Arduino 发送重启命令
-static void SendDebugRestart(int siginal)
+//向 Arduino 发送重置命令，并结束程序
+static void SendDebugReset(int siginal)
 {
     serialClose(fd);
     fd = serialOpen("/dev/ttyACM0", DEBUG_BAUT_RATE);
     digitalWrite(DEBUG_GPIO, LOW);
+    cout << '\n';
+    fileout << "Reset in: " << GetStrFullTime() << endl;
+    fileout.close();
+
+    exit(0);
 }
 
 
 //获取当前时间字符串
-string GetStrTime()
+string GetStrTime(void)
 {
     time_t timep;
     time(&timep);
@@ -63,12 +79,27 @@ string GetStrTime()
 }
 
 
-int main(void)
+//获取当前完整时间字符串
+string GetStrFullTime(void)
 {
+    time_t timep;
+    time(&timep);
+    char tmp[64];
+    strftime(tmp, sizeof(tmp), "%Y-%m-%d-%H-%M-%S", localtime(&timep));
+    return tmp;
+}
+
+
+int main(void)
+{    
     //注册 linux 终端信号
     signal(SIGINT, SendDebugPause); //Ctrl + C
     signal(SIGTSTP, SendDebugContinue); //Ctrl + Z
-    signal(SIGQUIT, SendDebugRestart); //Ctrl + \
+    signal(SIGQUIT, SendDebugReset); //Ctrl + \
+
+    //新建 log 文件
+    string filename = GetStrFullTime() + ".log";
+    fileout.open(filename.c_str(), ios::out);
 
     //初始化树莓派 GPIO
     wiringPiSetup();
@@ -115,6 +146,7 @@ int main(void)
                     }
 
                     cout << line_head + line_type + line_info + COLOR_RESET;
+                    fileout << line_head + line_info;
                     break;
                 }
             }
