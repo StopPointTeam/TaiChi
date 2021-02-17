@@ -62,10 +62,10 @@ int8_t route[][3] =
 
 
 //****************************************可调参数****************************************
-//抓取点移动用时
-#define CATCH_MOVE_DELAY_TIME 2000
-//释放点移动用时
-#define RELEASE_MOVE_DELAY_TIME 2000
+//抓取点移动用时 us
+#define CATCH_MOVE_DELAY_TIME 2000000
+//释放点移动用时 us
+#define RELEASE_MOVE_DELAY_TIME 2000000
 
 //重置留时
 #define RESET_DELAY_TIME 10000
