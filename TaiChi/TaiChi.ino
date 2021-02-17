@@ -516,7 +516,7 @@ bool CatchAndCheckIsDone(float speed)
     if (sensor.IsPushed(BUTTON_1)) //开关 1 闭合，即爪子两端接触，说明抓取失败
     {
         #ifdef TAICHI_DEBUG
-        //调试输出错误信息
+        //调试输出失败信息
         Serial.println("#TAICHI: FAIL CATCH!");
         #endif
         
@@ -528,7 +528,7 @@ bool CatchAndCheckIsDone(float speed)
         if (sensor.IsPushed(BUTTON_1))
         {
             #ifdef TAICHI_DEBUG
-            //调试输出错误信息
+            //调试输出失败信息
             Serial.println("#TAICHI: FAIL CATCH AGAIN!");
             #endif
 
@@ -537,7 +537,7 @@ bool CatchAndCheckIsDone(float speed)
     }
 
     #ifdef TAICHI_DEBUG
-    //调试输出错误信息
+    //调试输出成功信息
     Serial.println("#TAICHI: SUCCUESS CATCH!");
     #endif
 
