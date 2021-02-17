@@ -114,6 +114,9 @@ void LineBackward(uint8_t end_position, float speed_rate = 1.0);
 
 //直行或后退或转向
 void TurnDirection(float speed_rate = 1.0);
+
+//抓取环，并判定是否抓取成功
+bool CatchAndCheckIsDone(float speed = 1.0);
 //***************************************************************************************
 
 
@@ -176,8 +179,7 @@ void loop()
         LineForward(CATCH_END);
 
         //抓取
-        servo.Catch();
-        delay(CATCH_DELAY_TIME); //抓取留时
+        CatchAndCheckIsDone();
 
         //继续沿线直行，到前端传感器接触下一条线为止
         LineForward(FRONT_END);
@@ -479,4 +481,32 @@ void TurnDirection(float speed_rate)
     //调试输出直行或后退或转向结束
     Serial.println("#TAICHI: End Turn Direction");
     #endif
+}
+
+
+//抓取环，并判定是否抓取成功
+bool CatchAndCheckIsDone(float speed)
+{
+    //执行抓取动作
+    servo.Catch(speed);
+
+    //等待完成动作
+    delay(CATCH_DELAY_TIME);
+
+    if (sensor.IsPushed(BUTTON_1)) //开关 1 闭合，即爪子两端接触，说明抓取失败
+    {
+        servo.Catch(speed); //重试，此次检测但不重试
+        
+        //等待完成动作
+        delay(CATCH_DELAY_TIME);
+
+        if (sensor.IsPushed(BUTTON_1))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return true;
+    }
 }
