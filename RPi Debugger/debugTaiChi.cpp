@@ -25,6 +25,9 @@ using namespace std;
 #define COLOR_RESET "\x1B[0m"
 
 
+int fd; //串口
+
+
 //向 Arduino 发送暂停命令
 static void SendDebugPause(int siginal)
 {
@@ -37,6 +40,15 @@ static void SendDebugContinue(int siginal)
 {
     digitalWrite(DEBUG_GPIO, HIGH);
     cout << '\n';
+}
+
+
+//向 Arduino 发送重启命令
+static void SendDebugRestart(int siginal)
+{
+    serialClose(fd);
+    fd = serialOpen("/dev/ttyACM0", DEBUG_BAUT_RATE);
+    digitalWrite(DEBUG_GPIO, LOW);
 }
 
 
@@ -56,6 +68,7 @@ int main(void)
     //注册 linux 终端信号
     signal(SIGINT, SendDebugPause); //Ctrl + C
     signal(SIGTSTP, SendDebugContinue); //Ctrl + Z
+    signal(SIGQUIT, SendDebugRestart); //Ctrl + \
 
     //初始化树莓派 GPIO
     wiringPiSetup();
@@ -65,7 +78,7 @@ int main(void)
     digitalWrite(DEBUG_GPIO, LOW);
 
     //打开串口
-	int fd = serialOpen("/dev/ttyACM0", DEBUG_BAUT_RATE);
+	fd = serialOpen("/dev/ttyACM0", DEBUG_BAUT_RATE);
 	while (1)
 	{
         string line_head = GetStrTime() + " -> ";
