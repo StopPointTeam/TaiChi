@@ -28,9 +28,11 @@ Servo servo; //舵机实例
 
 //****************************************运动路径****************************************
 //坐标点操作定义
-#define NORMAL_POINT 0
-#define CATCH_POINT 1
-#define RELEASE_POINT 2
+#define NORMAL_POINT 0 //普通点
+#define CATCH_POINT 1 //抓取点
+#define RELEASE_POINT 2 //释放点（使用机械臂）
+#define CARRY_POINT 0 //携带点，在算法中可视为普通点
+#define GETOUT_POINT 4 //释放点（从底盘）
 
 //坐标点数组定义
 #define X 0
@@ -190,7 +192,7 @@ void loop()
         //抓取完成后，将越过的点视为普通点
         route[next_flag][TYPE] = NORMAL_POINT;
     }
-    //情况三：刚完整经过普通点，下一个点为释放点
+    //情况三：刚完整经过普通点，下一个点为释放点（使用机械臂）
     else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == RELEASE_POINT)
     {
         //沿线直行，在释放位置停止
@@ -203,7 +205,7 @@ void loop()
         //释放完成后，下一点朝向为后
         next_position = BACK_NEXT;
     }
-    //情况四：刚完整经过释放点，下一个点为普通点
+    //情况四：刚完整经过释放点（使用机械臂），下一个点为普通点
     else if (route[passed_flag][TYPE] == RELEASE_POINT && route[next_flag][TYPE] == NORMAL_POINT)
     {
         //沿线后退，到后端传感器接触下一条线为止
@@ -212,6 +214,24 @@ void loop()
         //机械臂复原
         servo.Reset();
         delay(RESET_DELAY_TIME); //复原留时
+
+        //继续后退或转向
+        TurnDirection();
+    }
+    //情况五：刚完整经过普通点，下一个点为释放点（从底盘）
+    else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == GETOUT_POINT)
+    {
+        //沿线直行，到后端传感器接触下一条线为止
+        LineForward(BACK_END);
+
+        //下一点朝向为后
+        next_position = BACK_NEXT;
+    }
+    //情况六：刚完整经过释放点（从底盘），下一个点为普通点
+    else if (route[passed_flag][TYPE] == RELEASE_POINT && route[next_flag][TYPE] == NORMAL_POINT)
+    {
+        //沿线后退，到后端传感器接触下一条线为止，以完成释放
+        LineBackward(BACK_END);
 
         //继续后退或转向
         TurnDirection();
@@ -495,6 +515,11 @@ bool CatchAndCheckIsDone(float speed)
 
     if (sensor.IsPushed(BUTTON_1)) //开关 1 闭合，即爪子两端接触，说明抓取失败
     {
+        #ifdef TAICHI_DEBUG
+        //调试输出错误信息
+        Serial.println("#TAICHI: FAIL CATCH!");
+        #endif
+        
         servo.Catch(speed); //重试，此次检测但不重试
         
         //等待完成动作
@@ -502,11 +527,19 @@ bool CatchAndCheckIsDone(float speed)
 
         if (sensor.IsPushed(BUTTON_1))
         {
+            #ifdef TAICHI_DEBUG
+            //调试输出错误信息
+            Serial.println("#TAICHI: FAIL CATCH AGAIN!");
+            #endif
+
             return false;
         }
     }
-    else
-    {
-        return true;
-    }
+
+    #ifdef TAICHI_DEBUG
+    //调试输出错误信息
+    Serial.println("#TAICHI: SUCCUESS CATCH!");
+    #endif
+
+    return true;
 }
