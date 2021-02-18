@@ -68,11 +68,11 @@ int8_t route[][3] =
 #define RELEASE_MOVE_DELAY_TIME 2000
 
 //重置留时
-#define RESET_DELAY_TIME 10000
+#define RESET_DELAY_TIME 5000
 //抓取留时
-#define CATCH_DELAY_TIME 10000
+#define CATCH_DELAY_TIME 5000
 //释放留时
-#define RELEASE_DELAY_TIME 10000
+#define RELEASE_DELAY_TIME 5000
 
 //传感器判断转向完成延时
 #define TRUN_CHECK_DELAY 1000
