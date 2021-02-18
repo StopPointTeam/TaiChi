@@ -9,11 +9,26 @@
 #define SERVO_DEBUG
 
 
+//默认与舵机控制板连接串口
+//默认使用 Mega 板 18 19 作为串口通信端口
+#define DEFAULT_SERVO_SERIAL_NUM Serial1
+
+
+//与舵机控制板串口通信波特率
 #define SERVO_BAUD_RATE 9600
+
+
+//爪子舵机 id
+#define CLAW_SERVO_ID 15
+//爪子打开时舵机位置
+#define CLAW_OPEN_POSITION 500
+//爪子打开用时
+#define CLAW_OPEN_USE_TIME 1000
 
 
 //发送部分的指令
 #define FRAME_HEADER 0x55            //帧头
+#define CMD_SERVO_MOVE 0x03          //舵机移动指令
 #define CMD_ACTION_GROUP_RUN 0x06    //运行动作组指令
 #define CMD_ACTION_GROUP_STOP 0x07   //停止动作组运行指令
 #define CMD_ACTION_GROUP_SPEED 0x0B  //设置动作组运行速度指令
@@ -35,10 +50,14 @@ public:
     Servo();
     Servo(HardwareSerial &serial_num); //构造函数，指定串口通信端口
 
+    void MoveServo(uint8_t servo_id, uint16_t position, uint16_t time); //控制单个舵机转动
+
     void RunActionGroup(uint8_t action_num, uint16_t times); //运行指定动作组
     void StopActionGroup(void); //停止动作组运行
     void SetActionGroupSpeed(uint8_t action_num, float speed); //设定指定动作组的运行速度
     void SetAllActionGroupSpeed(float speed); //设置所有动作组的运行速度
+
+    void OpenClaw(void); //打开爪子
 
     void Reset(float speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
     void Catch(float speed = SERVO_NORMAL_SPEED); //抓取，指定速度

@@ -11,7 +11,7 @@
 
 Servo::Servo()
 {
-    SerialX = &Serial1; //默认使用 Mega 板 18 19 作为串口通信端口
+    SerialX = &DEFAULT_SERVO_SERIAL_NUM; //默认使用 Mega 板 18 19 作为串口通信端口
     SerialX->begin(SERVO_BAUD_RATE);
 }
 
@@ -21,6 +21,33 @@ Servo::Servo(HardwareSerial& serial_num)
 {
     SerialX = &serial_num;
     SerialX->begin(SERVO_BAUD_RATE);
+}
+
+
+//控制单个舵机转动
+//servo_id: 舵机ID, position: 目标位置, time: 转动时间
+void Servo::MoveServo(uint8_t servo_id, uint16_t position, uint16_t time)
+{
+	uint8_t buf[11];
+	buf[0] = FRAME_HEADER;                   //填充帧头
+	buf[1] = FRAME_HEADER;
+	buf[2] = 8;                              //数据长度=要控制舵机数*3+5，此处=1*3+5
+	buf[3] = CMD_SERVO_MOVE;                 //填充舵机移动指令
+	buf[4] = 1;                              //要控制的舵机个数
+	buf[5] = GET_LOW_BYTE(time);             //填充时间的低八位
+	buf[6] = GET_HIGH_BYTE(time);            //填充时间的高八位
+	buf[7] = servo_id;                        //舵机ID
+	buf[8] = GET_LOW_BYTE(position);         //填充目标位置的低八位
+	buf[9] = GET_HIGH_BYTE(position);        //填充目标位置的高八位
+
+	SerialX->write(buf, 10);
+
+    #ifdef SERVO_DEBUG
+    //调试输出动作组执行信息
+    Serial.print("#SERVO:  MoveServo: "); Serial.print((int)servo_id); 
+    Serial.print(" position: "); Serial.print((int)position); 
+    Serial.print(" time: "); Serial.println((int)time);
+    #endif
 }
 
 
@@ -97,6 +124,13 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
 void Servo::SetAllActionGroupSpeed(float speed)
 {
     SetActionGroupSpeed(0xFF, speed); //调用动作组速度设定，组号为0xFF时设置所有组的速度
+}
+
+
+//打开爪子
+void Servo::OpenClaw(void) 
+{
+    MoveServo(CLAW_SERVO_ID, CLAW_OPEN_POSITION, CLAW_OPEN_USE_TIME);
 }
 
 
