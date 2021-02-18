@@ -125,6 +125,9 @@ void TurnDirection(float speed_rate = 1.0);
 
 //抓取环，并判定是否抓取成功
 bool CatchAndCheckIsDone(float speed = 1.0);
+
+//打开爪子，并判断爪子是否能正常工作
+bool OpenClawAndCheck(void);
 //***************************************************************************************
 
 
@@ -545,37 +548,9 @@ bool CatchAndCheckIsDone(float speed)
             //停止动作组运行
             servo.StopActionGroup();
 
-            //更新开始时间
-            begin_time = millis();
-
-            //打开爪子，目的保证下一次抓取开始时开关 1 打开，同时检测爪子是否正常
-            servo.OpenClaw();
-
-            //等待完成动作
-            while (millis() - begin_time < CLAW_OPEN_USE_TIME)
-            {
-                if (!sensor.IsPushed(BUTTON_1)) //开关 1 打开，即爪子两端脱离接触，说明打开爪子成功
-                {
-                    //更新开始时间
-                    begin_time = millis();
-                    
-                    //重试抓取动作
-                    servo.Catch(speed);
-                    catch_times++;
-                    break;
-                }
-            }
-
-            if (sensor.IsPushed(BUTTON_1)) //开关 1 仍闭合，即爪子两端接触，说明机械臂出现故障，无法打开爪子
-            {
-                #ifdef TAICHI_DEBUG
-                //调试输出失败信息
-                Serial.println("#TAICHI: $$$$$$$$$$FAIL CLAW!$$$$$$$$$$");
-                #endif
-                
-                is_claw_ok = false;
+            //打开爪子
+            if(!OpenClawAndCheck()) //未能打开爪子
                 return false;
-            }
         }
     }
 
@@ -585,4 +560,38 @@ bool CatchAndCheckIsDone(float speed)
     #endif
 
     return true;
+}
+
+
+//打开爪子，并判断爪子是否能正常工作
+bool OpenClawAndCheck(void)
+{
+    //记录开始时间
+    unsigned long begin_time = millis();
+
+    //打开爪子
+    servo.OpenClaw();
+
+    //等待完成动作
+    while (millis() - begin_time < CLAW_OPEN_USE_TIME)
+    {
+        if (!sensor.IsPushed(BUTTON_1)) //开关 1 打开，即爪子两端脱离接触，说明打开爪子成功
+        {
+            #ifdef TAICHI_DEBUG
+            //调试输出成功信息
+            Serial.println("#TAICHI: SUCCUESS OPEN CLAW!");
+            #endif
+            
+            is_claw_ok = true;
+            return true;
+        }
+    }
+
+    #ifdef TAICHI_DEBUG
+    //调试输出失败信息
+    Serial.println("#TAICHI: $$$$$$$$$$FAIL CLAW!$$$$$$$$$$");
+    #endif
+    
+    is_claw_ok = false;
+    return false;
 }
