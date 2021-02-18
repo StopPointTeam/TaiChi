@@ -3,24 +3,6 @@
 #include "servoTaiChi.h" //舵机库
 
 
-//****************************************调试相关****************************************
-//注释以关闭调试功能
-#define TAICHI_DEBUG
-
-#ifdef TAICHI_DEBUG
-
-#define DEBUG_BAUT_RATE 115200
-#define DEBUG_PAUSE_INTERRUPTNUM 2 //PIN 21
-#define DEBUG_PAUSE_PIN 21
-//中断函数，用于调试时暂停程序
-void DebugPause(void)
-{
-    while (digitalRead(DEBUG_PAUSE_PIN) == LOW) {}
-}
-#endif
-//***************************************************************************************
-
-
 Move move; //轮胎运动实例
 Sensor sensor; //传感器实例
 Servo servo; //舵机实例
@@ -43,20 +25,26 @@ int8_t route[][3] =
 {
     {0, 0, NORMAL_POINT},
     {0, 1, NORMAL_POINT},
-    {0, 2, CATCH_POINT},
-    {0, 3, NORMAL_POINT},
-    {1, 3, NORMAL_POINT},
+    {1, 1, CARRY_POINT},
+    {2, 1, NORMAL_POINT},
+    {2, 2, CATCH_POINT},
+    {2, 3, NORMAL_POINT},
+    {3, 3, GETOUT_POINT},
     {2, 3, NORMAL_POINT},
     {2, 4, NORMAL_POINT},
     {3, 4, RELEASE_POINT},
     {2, 4, NORMAL_POINT},
     {2, 3, NORMAL_POINT},
-    {2, 2, CATCH_POINT},
+    {1, 3, NORMAL_POINT},
+    {0, 3, NORMAL_POINT},
+    {0, 2, CATCH_POINT},
+    {1, 2, NORMAL_POINT},
+    {2, 2, NORMAL_POINT},
     {3, 2, RELEASE_POINT},
     {2, 2, NORMAL_POINT},
-    {1, 2, NORMAL_POINT},
-    {0, 2, NORMAL_POINT},
-    {0, 1, NORMAL_POINT}
+    {2, 3, NORMAL_POINT},
+    {3, 3, GETOUT_POINT},
+    {2, 3, NORMAL_POINT}
 };
 //***************************************************************************************
 
@@ -134,6 +122,43 @@ bool OpenClawAndCheck(void);
 //***************************************************************************************
 
 
+//****************************************调试相关****************************************
+//注释以关闭调试功能
+#define TAICHI_DEBUG
+
+#ifdef TAICHI_DEBUG
+
+#define DEBUG_BAUT_RATE 115200
+#define DEBUG_PAUSE_INTERRUPTNUM 2 //PIN 21
+#define DEBUG_PAUSE_PIN 21
+
+int loop_time = 0;
+
+//中断函数，用于调试时暂停程序
+void DebugPause(void)
+{
+    while (digitalRead(DEBUG_PAUSE_PIN) == LOW) {}
+}
+
+//错误消息函数，用于在出现致命错误后结束程序
+void DebugCanNotContinue(char* message)
+{
+    Serial.print("#TAICHI: CAN NOT CONTINUE WHEN "); Serial.println(message);
+    Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
+    Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
+    Serial.print(" flag: "); Serial.print(passed_flag);
+    Serial.print(" TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
+    Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
+    Serial.print(" next_position: "); Serial.print((int)next_position);
+    Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
+    Serial.print("#TAICHI: is_claw_catch: "); Serial.print((int)is_claw_catch); Serial.print(" is_claw_ok: "); Serial.println((int)is_claw_ok);
+
+    while (1) {}
+}
+#endif
+//***************************************************************************************
+
+
 void setup()
 {
     #ifdef TAICHI_DEBUG
@@ -159,7 +184,6 @@ void setup()
 void loop()
 {
     #ifdef TAICHI_DEBUG
-    static int loop_time = 0;
     loop_time++;
     Serial.println("#TAICHI: ====================New loop()====================");
     Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
@@ -245,7 +269,7 @@ void loop()
         //沿线后退，到后端传感器接触下一条线离开函数
         LineBackward(BACK_END);
 
-        //停止前进
+        //停止后退
         move.Stop();
 
         //机械臂复原
@@ -270,7 +294,10 @@ void loop()
     //情况六：刚完整经过释放点（从底盘），下一个点为普通点
     else if (route[passed_flag][TYPE] == GETOUT_POINT && route[next_flag][TYPE] == NORMAL_POINT)
     {
-        //沿线后退，到后端传感器接触下一条线离开函数，以完成释放
+        //沿线后退，到前端传感器接触线离开函数
+        LineBackward(FRONT_END);
+        
+        //沿线后退，到后端传感器接触线离开函数
         LineBackward(BACK_END);
 
         //继续后退或转向
@@ -282,14 +309,7 @@ void loop()
         move.Stop();
 
         #ifdef TAICHI_DEBUG
-        Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
-        Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
-        Serial.print(" flag: "); Serial.print(passed_flag);
-        Serial.print(" TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
-        Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
-        Serial.print(" next_position: "); Serial.print((int)next_position);
-        Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
-        Serial.print("#TAICHI: is_claw_catch: "); Serial.print((int)is_claw_catch); Serial.print(" is_claw_ok: "); Serial.println((int)is_claw_ok);
+        DebugCanNotContinue("CHOOSE LOOP");
         #endif
 
         while (1) {}
@@ -344,7 +364,7 @@ uint8_t CalcDirection(void)
         rx = -ry0;
         ry = rx0;
     }
-    else return 254; //调试用
+    else DebugCanNotContinue("CALC DIRECTION"); //调试用
 
     //判断行进方向
     if (rx == 0 && ry == 2)
@@ -395,7 +415,7 @@ uint8_t CalcDirection(void)
             return BACKRIGHTWARD;
         }
     }
-    else return 255; //调试用
+    else DebugCanNotContinue("CALC DIRECTION"); //调试用
 }
 
 
