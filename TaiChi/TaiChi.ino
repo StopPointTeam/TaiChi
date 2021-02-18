@@ -196,7 +196,7 @@ void loop()
     Serial.print("#TAICHI: is_claw_catch: "); Serial.print((int)is_claw_catch); Serial.print(" is_claw_ok: "); Serial.println((int)is_claw_ok);
     #endif
 
-    //情况一：刚完整经过普通点，下一个点为普通点或携带点
+    //情况一：刚完整经过普通点，下一个点为普通点
     if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == NORMAL_POINT)   
     {
         if (next_position == FRONT_NEXT)
