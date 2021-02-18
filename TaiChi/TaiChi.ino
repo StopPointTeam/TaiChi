@@ -151,10 +151,12 @@ void loop()
     loop_time++;
     Serial.println("#TAICHI: ====================New loop()====================");
     Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
-    Serial.print("#TAICHI: passed_flag: "); Serial.println(passed_flag);
-    Serial.print("#TAICHI: next_position: "); Serial.println((int)next_position);
-    Serial.print("#TAICHI: passed_flag TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
-    Serial.print("#TAICHI: next_flag TYPE: "); Serial.println((int)route[next_flag][TYPE]);
+    Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
+    Serial.print(" flag: "); Serial.print(passed_flag);
+    Serial.print(" TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
+    Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
+    Serial.print(" next_position: "); Serial.print((int)next_position);
+    Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
     #endif
 
     //情况一：刚完整经过普通点，下一个点为普通点
@@ -243,10 +245,13 @@ void loop()
 
         #ifdef TAICHI_DEBUG
         Serial.println("#TAICHI: FAIL TO RUN NEW LOOP!");
-        Serial.print("#TAICHI: passed_flag: "); Serial.println(passed_flag);
-        Serial.print("#TAICHI: next_position: "); Serial.println((int)next_position);
-        Serial.print("#TAICHI: passed_flag TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
-        Serial.print("#TAICHI: next_flag TYPE: "); Serial.println((int)route[next_flag][TYPE]);
+        Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
+        Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
+        Serial.print(" flag: "); Serial.print(passed_flag);
+        Serial.print(" TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
+        Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
+        Serial.print(" next_position: "); Serial.print((int)next_position);
+        Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
         #endif
 
         while (1) {}
