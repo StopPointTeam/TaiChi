@@ -101,6 +101,9 @@ int max_flag;
 //下一点朝向
 uint8_t next_position = FRONT_NEXT;
 
+//爪子是否抓有环
+bool is_claw_catch = false;
+
 //爪子是否正常
 bool is_claw_ok = true;
 //***************************************************************************************
@@ -114,17 +117,17 @@ uint8_t CalcDirection(void);
 #define BACK_END 1
 #define CATCH_END 2
 #define RELEASE_END 3
-//沿线直行，在触发条件后停止
+//沿线直行，在触发条件后离开函数但不停止
 void LineForward(uint8_t end_position, float speed_rate = 1.0);
 
-//沿线后退，在触发条件后停止
+//沿线后退，在触发条件后离开函数但不停止
 void LineBackward(uint8_t end_position, float speed_rate = 1.0);
 
-//直行或后退或转向
+//直行或后退或转向，完成后离开函数但不停止
 void TurnDirection(float speed_rate = 1.0);
 
 //抓取环，并判定是否抓取成功
-bool CatchAndCheckIsDone(float speed = 1.0);
+bool CatchAndCheck(float speed = 1.0);
 
 //打开爪子，并判断爪子是否能正常工作
 bool OpenClawAndCheck(void);
@@ -146,7 +149,7 @@ void setup()
     max_flag = sizeof(route) / sizeof(route[0]) - 1;
 
     //前往 0, 0
-    //沿线直行，到后端传感器接触下一条线为止
+    //沿线直行，到后端传感器接触下一条线离开函数
     LineForward(BACK_END);
 
     //已越过 0, 0 正式进入循环
@@ -166,19 +169,20 @@ void loop()
     Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
     Serial.print(" next_position: "); Serial.print((int)next_position);
     Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
+    Serial.print("#TAICHI: is_claw_catch: "); Serial.print((int)is_claw_catch); Serial.print(" is_claw_ok: "); Serial.println((int)is_claw_ok);
     #endif
 
-    //情况一：刚完整经过普通点，下一个点为普通点
+    //情况一：刚完整经过普通点，下一个点为普通点或携带点
     if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == NORMAL_POINT)   
     {
         if (next_position == FRONT_NEXT)
         {
-            //沿线直行，到前端传感器接触下一条线为止
+            //沿线直行，到前端传感器接触下一条线离开函数
             LineForward(FRONT_END);
         }
         else
         {
-            //沿线后退，到后端传感器接触下一条线为止
+            //沿线后退，到后端传感器接触下一条线离开函数
             LineBackward(BACK_END);
         }
 
@@ -188,39 +192,61 @@ void loop()
     //情况二：刚完整经过普通点，下一个点为抓取点
     else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == CATCH_POINT)
     {
-        //沿线直行，在抓取位置停止
-        LineForward(CATCH_END);
+        if (!is_claw_catch && !is_claw_ok) //爪子上无环且状态不正常
+        {  
+            move.Stop(); //停止前进
+            OpenClawAndCheck(); //再次检测爪子是否正常
+        }
 
-        //抓取
-        CatchAndCheckIsDone();
+        if (!is_claw_catch && is_claw_ok) //爪子上无环且状态正常
+        {
+            //沿线直行，在抓取位置离开函数
+            LineForward(CATCH_END);
 
-        //继续沿线直行，到前端传感器接触下一条线为止
+            //停止前进
+            move.Stop();
+
+            //抓取
+            CatchAndCheck();
+        }
+
+        //继续沿线直行，到前端传感器接触下一条线离开函数
         LineForward(FRONT_END);
 
         //继续直行或后退或转向
         TurnDirection();
 
-        //抓取完成后，将越过的点视为普通点
+        //将越过的点视为普通点。因为即使抓取失败，环也会被携带在底盘内
         route[next_flag][TYPE] = NORMAL_POINT;
     }
     //情况三：刚完整经过普通点，下一个点为释放点（使用机械臂）
     else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == RELEASE_POINT)
     {
-        //沿线直行，在释放位置停止
+        //沿线直行，在释放位置离开函数
         LineForward(RELEASE_END);
 
-        //释放
-        servo.Release();
-        delay(RELEASE_DELAY_TIME); //释放留时
+        //停止前进
+        move.Stop();
 
-        //释放完成后，下一点朝向为后
+        if (is_claw_catch) //爪子有环
+        {   
+            //释放
+            servo.Release();
+            delay(RELEASE_DELAY_TIME); //释放留时
+            is_claw_catch = false;
+        }
+
+        //下一点朝向为后
         next_position = BACK_NEXT;
     }
     //情况四：刚完整经过释放点（使用机械臂），下一个点为普通点
     else if (route[passed_flag][TYPE] == RELEASE_POINT && route[next_flag][TYPE] == NORMAL_POINT)
     {
-        //沿线后退，到后端传感器接触下一条线为止
+        //沿线后退，到后端传感器接触下一条线离开函数
         LineBackward(BACK_END);
+
+        //停止前进
+        move.Stop();
 
         //机械臂复原
         servo.Reset();
@@ -232,16 +258,19 @@ void loop()
     //情况五：刚完整经过普通点，下一个点为释放点（从底盘）
     else if (route[passed_flag][TYPE] == NORMAL_POINT && route[next_flag][TYPE] == GETOUT_POINT)
     {
-        //沿线直行，到后端传感器接触下一条线为止
+        //沿线直行，到后端传感器接触下一条线离开函数
         LineForward(BACK_END);
+
+        //停止前进
+        move.Stop();
 
         //下一点朝向为后
         next_position = BACK_NEXT;
     }
     //情况六：刚完整经过释放点（从底盘），下一个点为普通点
-    else if (route[passed_flag][TYPE] == RELEASE_POINT && route[next_flag][TYPE] == NORMAL_POINT)
+    else if (route[passed_flag][TYPE] == GETOUT_POINT && route[next_flag][TYPE] == NORMAL_POINT)
     {
-        //沿线后退，到后端传感器接触下一条线为止，以完成释放
+        //沿线后退，到后端传感器接触下一条线离开函数，以完成释放
         LineBackward(BACK_END);
 
         //继续后退或转向
@@ -253,7 +282,6 @@ void loop()
         move.Stop();
 
         #ifdef TAICHI_DEBUG
-        Serial.println("#TAICHI: **********FAIL TO RUN NEW LOOP!**********");
         Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
         Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
         Serial.print(" flag: "); Serial.print(passed_flag);
@@ -261,6 +289,7 @@ void loop()
         Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
         Serial.print(" next_position: "); Serial.print((int)next_position);
         Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
+        Serial.print("#TAICHI: is_claw_catch: "); Serial.print((int)is_claw_catch); Serial.print(" is_claw_ok: "); Serial.println((int)is_claw_ok);
         #endif
 
         while (1) {}
@@ -370,7 +399,7 @@ uint8_t CalcDirection(void)
 }
 
 
-//沿线直行，在触发条件后停止
+//沿线直行，在触发条件后离开函数但不停止
 void LineForward(uint8_t end_position, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
@@ -402,22 +431,22 @@ void LineForward(uint8_t end_position, float speed_rate)
             move.Backward(LINE_FIND_SPEED_RATE);
         }
 
-        if (end_position == FRONT_END) //前端接触线为止
+        if (end_position == FRONT_END) //前端接触线离开函数
         {
             if (sensor.IsWhite(GRAY_1) && sensor.IsWhite(GRAY_2))
                 break;
         }
-        else if (end_position == BACK_END) //后端接触线为止
+        else if (end_position == BACK_END) //后端接触线离开函数
         {
             if (sensor.IsWhite(GRAY_5) && sensor.IsWhite(GRAY_6))
                 break;
         }
-        else if (end_position == CATCH_END) //到达抓取位置为止
+        else if (end_position == CATCH_END) //到达抓取位置离开函数
         {
             if (millis() - begin_time > CATCH_MOVE_DELAY_TIME)
                 break;
         }
-        else //到达释放位置为止
+        else //到达释放位置离开函数
         {
             if (millis() - begin_time > RELEASE_MOVE_DELAY_TIME)
                 break;
@@ -431,7 +460,7 @@ void LineForward(uint8_t end_position, float speed_rate)
 }
 
 
-//沿线后退，在触发条件后停止
+//沿线后退，在触发条件后离开函数但不停止
 void LineBackward(uint8_t end_position, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
@@ -461,16 +490,16 @@ void LineBackward(uint8_t end_position, float speed_rate)
         }
 
 
-        if (end_position == FRONT_END) //前端接触线为止
+        if (end_position == FRONT_END) //前端接触线离开函数
         {
             if (sensor.IsWhite(GRAY_1) && sensor.IsWhite(GRAY_2))
                 break;
         }
-        else //后端接触线为止
+        else //后端接触线离开函数
         {
             if (sensor.IsWhite(GRAY_5) && sensor.IsWhite(GRAY_6))
                 break;
-        }      
+        }
     }
 
     #ifdef TAICHI_DEBUG
@@ -480,7 +509,7 @@ void LineBackward(uint8_t end_position, float speed_rate)
 }
 
 
-//直行或后退或转向
+//直行或后退或转向，完成后离开函数但不停止
 void TurnDirection(float speed_rate)
 {    
     uint8_t direction = CalcDirection();
@@ -494,12 +523,12 @@ void TurnDirection(float speed_rate)
     
     if (direction == FORWARD) //继续直行
     {
-        //沿线直行，到后端传感器接触线为止
+        //沿线直行，到后端传感器接触线离开函数
         LineForward(BACK_END, speed_rate);
     }
     else if (direction == BACKWARD) //继续后退
     {
-        //沿线后退，到前端传感器接触线为止
+        //沿线后退，到前端传感器接触线离开函数
         LineBackward(FRONT_END, speed_rate);
     }
     else //继续转向
@@ -519,7 +548,7 @@ void TurnDirection(float speed_rate)
 
 
 //抓取环，并判定是否抓取成功
-bool CatchAndCheckIsDone(float speed)
+bool CatchAndCheck(float speed)
 {
     //记录开始时间
     unsigned long begin_time = millis();
@@ -559,6 +588,7 @@ bool CatchAndCheckIsDone(float speed)
     Serial.println("#TAICHI: SUCCUESS CATCH!");
     #endif
 
+    is_claw_catch = true;
     return true;
 }
 
