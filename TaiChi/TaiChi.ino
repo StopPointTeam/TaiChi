@@ -74,6 +74,9 @@ int8_t route[][3] =
 //释放留时
 #define RELEASE_DELAY_TIME 5000
 
+//最大抓取尝试次数
+#define MAX_CATCH_TIMES 2
+
 //传感器判断转向完成延时
 #define TRUN_CHECK_DELAY 1000
 
@@ -97,6 +100,9 @@ int max_flag;
 #define BACK_NEXT 1
 //下一点朝向
 uint8_t next_position = FRONT_NEXT;
+
+//爪子是否正常
+bool is_claw_ok = true;
 //***************************************************************************************
 
 
@@ -512,32 +518,64 @@ void TurnDirection(float speed_rate)
 //抓取环，并判定是否抓取成功
 bool CatchAndCheckIsDone(float speed)
 {
+    //记录开始时间
+    unsigned long begin_time = millis();
+
+    //抓取次数
+    uint8_t catch_times = 0;
+    
     //执行抓取动作
     servo.Catch(speed);
+    catch_times++;
 
     //等待完成动作
-    delay(CATCH_DELAY_TIME);
-
-    if (sensor.IsPushed(BUTTON_1)) //开关 1 闭合，即爪子两端接触，说明抓取失败
+    while (millis() - begin_time < CATCH_DELAY_TIME)
     {
-        #ifdef TAICHI_DEBUG
-        //调试输出失败信息
-        Serial.println("#TAICHI: **********FAIL CATCH!**********");
-        #endif
-        
-        servo.Catch(speed); //重试，此次检测但不重试
-        
-        //等待完成动作
-        delay(CATCH_DELAY_TIME);
-
-        if (sensor.IsPushed(BUTTON_1))
+        if (sensor.IsPushed(BUTTON_1)) //开关 1 闭合，即爪子两端接触，说明抓取失败
         {
             #ifdef TAICHI_DEBUG
             //调试输出失败信息
-            Serial.println("#TAICHI: **********FAIL CATCH AGAIN!**********");
+            Serial.print("#TAICHI: **********FAIL CATCH!**********");
+            Serial.print(" catch_times: "); Serial.println((int)catch_times);
             #endif
 
-            return false;
+            if (catch_times == MAX_CATCH_TIMES) //达到最大尝试次数，返回
+                return false;
+            
+            //停止动作组运行
+            servo.StopActionGroup();
+
+            //更新开始时间
+            begin_time = millis();
+
+            //打开爪子，目的保证下一次抓取开始时开关 1 打开，同时检测爪子是否正常
+            servo.OpenClaw();
+
+            //等待完成动作
+            while (millis() - begin_time < CLAW_OPEN_USE_TIME)
+            {
+                if (!sensor.IsPushed(BUTTON_1)) //开关 1 打开，即爪子两端脱离接触，说明打开爪子成功
+                {
+                    //更新开始时间
+                    begin_time = millis();
+                    
+                    //重试抓取动作
+                    servo.Catch(speed);
+                    catch_times++;
+                    break;
+                }
+            }
+
+            if (sensor.IsPushed(BUTTON_1)) //开关 1 仍闭合，即爪子两端接触，说明机械臂出现故障，无法打开爪子
+            {
+                #ifdef TAICHI_DEBUG
+                //调试输出失败信息
+                Serial.println("#TAICHI: $$$$$$$$$$FAIL CLAW!$$$$$$$$$$");
+                #endif
+                
+                is_claw_ok = false;
+                return false;
+            }
         }
     }
 
