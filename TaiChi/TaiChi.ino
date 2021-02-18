@@ -600,6 +600,13 @@ bool CatchAndCheck(float speed)
             //打开爪子
             if(!OpenClawAndCheck()) //未能打开爪子
                 return false;
+
+            //更新时间
+            begin_time = millis();
+
+            //执行抓取动作
+            servo.Catch(speed);
+            catch_times++;
         }
     }
 
