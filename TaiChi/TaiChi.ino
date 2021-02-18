@@ -62,10 +62,10 @@ int8_t route[][3] =
 
 
 //****************************************可调参数****************************************
-//抓取点移动用时 us
-#define CATCH_MOVE_DELAY_TIME 2000000
-//释放点移动用时 us
-#define RELEASE_MOVE_DELAY_TIME 2000000
+//抓取点移动用时
+#define CATCH_MOVE_DELAY_TIME 2000
+//释放点移动用时
+#define RELEASE_MOVE_DELAY_TIME 2000
 
 //重置留时
 #define RESET_DELAY_TIME 10000
@@ -244,7 +244,7 @@ void loop()
         move.Stop();
 
         #ifdef TAICHI_DEBUG
-        Serial.println("#TAICHI: FAIL TO RUN NEW LOOP!");
+        Serial.println("#TAICHI: **********FAIL TO RUN NEW LOOP!**********");
         Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
         Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
         Serial.print(" flag: "); Serial.print(passed_flag);
@@ -372,7 +372,7 @@ void LineForward(uint8_t end_position, float speed_rate)
     #endif
 
     //记录开始时间
-    unsigned long begin_time = micros();
+    unsigned long begin_time = millis();
 
     while(1)
     {
@@ -405,12 +405,12 @@ void LineForward(uint8_t end_position, float speed_rate)
         }
         else if (end_position == CATCH_END) //到达抓取位置为止
         {
-            if (micros() - begin_time > CATCH_MOVE_DELAY_TIME)
+            if (millis() - begin_time > CATCH_MOVE_DELAY_TIME)
                 break;
         }
         else //到达释放位置为止
         {
-            if (micros() - begin_time > RELEASE_MOVE_DELAY_TIME)
+            if (millis() - begin_time > RELEASE_MOVE_DELAY_TIME)
                 break;
         }
     }
@@ -522,7 +522,7 @@ bool CatchAndCheckIsDone(float speed)
     {
         #ifdef TAICHI_DEBUG
         //调试输出失败信息
-        Serial.println("#TAICHI: FAIL CATCH!");
+        Serial.println("#TAICHI: **********FAIL CATCH!**********");
         #endif
         
         servo.Catch(speed); //重试，此次检测但不重试
@@ -534,7 +534,7 @@ bool CatchAndCheckIsDone(float speed)
         {
             #ifdef TAICHI_DEBUG
             //调试输出失败信息
-            Serial.println("#TAICHI: FAIL CATCH AGAIN!");
+            Serial.println("#TAICHI: **********FAIL CATCH AGAIN!**********");
             #endif
 
             return false;
