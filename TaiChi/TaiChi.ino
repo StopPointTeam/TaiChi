@@ -101,8 +101,8 @@ bool is_carry = false;
 
 
 //****************************************自定函数****************************************
-//在开始运行前检测灰度参数是否正常，若不正常，异常传感器闪烁，程序不继续进行
-void CheckGrayGate(void);
+//在开始运行前依次检测各灰度传感器下方黑白是否正常，若不正常，异常传感器闪烁，程序不继续进行
+void CheckGrayStatus(void);
 
 #define NO_JUMP 0
 #define JUMP_DEAD_ROAD 1
@@ -181,8 +181,8 @@ void setup()
     move.Stop();
     servo.StopAndReset();
 
-    //在开始运行前检测灰度参数是否正常
-    CheckGrayGate();
+    //在开始运行前依次检测各灰度传感器下方黑白是否正常
+    CheckGrayStatus();
 
     //计算最大数组下标
     max_flag = sizeof(route) / sizeof(route[0]) - 1;
@@ -356,13 +356,13 @@ void loop()
 }
 
 
-//在开始运行前检测灰度参数是否正常，若不正常，异常传感器闪烁，程序不继续进行
-void CheckGrayGate(void)
+//在开始运行前依次检测各灰度传感器下方黑白是否正常，若不正常，异常传感器闪烁，程序不继续进行
+void CheckGrayStatus(void)
 {
-    //若参数正常，1 2 5 6 号传感器检测到黑色，3 4 号传感器检测到白色
-    bool is_gate_right = false;
+    //若正常，1 2 5 6 号传感器检测到黑色，3 4 号传感器检测到白色
+    bool is_status_right = false;
 
-    while (!is_gate_right)
+    while (!is_status_right)
     {
         if (sensor.IsWhite(GRAY_1))
             sensor.FlashGraySensor(GRAY_1);
@@ -376,7 +376,7 @@ void CheckGrayGate(void)
             sensor.FlashGraySensor(GRAY_5);
         else if (sensor.IsWhite(GRAY_6))
             sensor.FlashGraySensor(GRAY_6);
-        else is_gate_right = true;
+        else is_status_right = true;
     }
 
     #ifdef TAICHI_DEBUG
