@@ -380,7 +380,7 @@ void CheckGrayStatus(void)
     }
 
     #ifdef TAICHI_DEBUG
-    Serial.println("#TAICHI: Gray Gate OK!");
+    Serial.println("#TAICHI: Gray Sensor Status OK!");
     #endif
 }
 
@@ -442,7 +442,7 @@ uint8_t CalcDirection(void)
         rx = -ry0;
         ry = rx0;
     }
-    else DebugCanNotContinue("CALC DIRECTION"); //调试用
+    else DebugCanNotContinue("CALC DIRECTION <1>"); //调试用
 
     //判断行进方向
     if (rx == 0 && ry == 2)
@@ -493,7 +493,7 @@ uint8_t CalcDirection(void)
             return BACKRIGHTWARD;
         }
     }
-    else DebugCanNotContinue("CALC DIRECTION"); //调试用
+    else DebugCanNotContinue("CALC DIRECTION <2>"); //调试用
 }
 
 
