@@ -83,9 +83,9 @@ void Move::Wheel(uint8_t wheel, uint8_t rotation, float speed_rate)
         return; //结束函数
     }
     
-    analogWrite(pin_enx, speed_rate * global_speed_rate * 255.0); //设置 PWM 波，即转速
+    analogWrite(pin_enx, abs(speed_rate) * global_speed_rate * 255.0); //设置 PWM 波，即转速
 
-    if (rotation == FORWARD_ROTATION) //向前转动
+    if ((rotation == FORWARD_ROTATION && speed_rate >= 0) || (rotation == BACKWARD_ROTATION && speed_rate < 0)) //向前转动
     {
         digitalWrite(pin_in1, LOW);
         digitalWrite(pin_in2, HIGH);

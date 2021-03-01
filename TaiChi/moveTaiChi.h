@@ -30,7 +30,7 @@
 #define DEFAULT_GLOBAL_SPEED_RATE 1.0
 
 //默认转向时一侧减速的比率
-#define DEFAULT_TRUN_SPEED_RATE 0.5
+#define DEFAULT_TRUN_SPEED_RATE -1.0
 
 //左侧 L298N 接口定义
 #define LEFT_L298N_IN1 22
