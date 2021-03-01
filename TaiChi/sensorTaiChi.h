@@ -23,7 +23,7 @@
 #define GRAY_6_VCC 53
 
 //灰度传感器临界值
-#define GRAY_GATE_VAL 800
+#define GRAY_GATE_VAL 700
 
 //灰度传感器闪烁时间
 #define GRAY_FLASH_TIME 200
