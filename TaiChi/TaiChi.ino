@@ -65,8 +65,10 @@ int8_t route[][3] =
 //最大抓取尝试次数
 #define MAX_CATCH_TIMES 2
 
-//传感器判断转向完成延时
-#define TRUN_CHECK_DELAY 1000
+//从触碰白线到开始转向延时
+#define BEFORE_TURN_DELAY 775
+//从开始转向到转向结束延时
+#define AFTER_TURN_DELAY 1130
 
 //修正循迹时单侧减速比率
 #define LINE_FIX_SPEED_RATE 0.8
@@ -643,11 +645,9 @@ void TurnDirection(float speed_rate)
     }
     else //继续转向
     {
+        delay(BEFORE_TURN_DELAY);
         move.MoveDirection(direction, speed_rate);
-
-        //传感器判断转向完成
-        delay(TRUN_CHECK_DELAY); //延时后判断
-        while(!(sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4))) {}
+        delay(AFTER_TURN_DELAY);
     }
 
     #ifdef TAICHI_DEBUG
