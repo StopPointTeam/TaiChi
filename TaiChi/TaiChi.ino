@@ -173,6 +173,7 @@ void DebugCanNotContinue(char* message)
 void setup()
 {
     #ifdef TAICHI_DEBUG
+    pinMode(DEBUG_PAUSE_PIN, INPUT_PULLUP);
     attachInterrupt(DEBUG_PAUSE_INTERRUPTNUM, DebugPause, LOW);
     Serial.begin(DEBUG_BAUT_RATE);
     Serial.println("#TAICHI: ======================setup()=====================");
