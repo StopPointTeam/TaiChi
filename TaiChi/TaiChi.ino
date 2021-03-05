@@ -51,9 +51,9 @@ int8_t route[][3] =
 
 //****************************************可调参数****************************************
 //抓取点移动用时
-#define CATCH_MOVE_DELAY_TIME 2000
+#define CATCH_MOVE_DELAY_TIME 700
 //释放点移动用时
-#define RELEASE_MOVE_DELAY_TIME 2000
+#define RELEASE_MOVE_DELAY_TIME 700
 
 //重置留时
 #define RESET_DELAY_TIME 5000
@@ -65,19 +65,25 @@ int8_t route[][3] =
 //最大抓取尝试次数
 #define MAX_CATCH_TIMES 2
 
-//从触碰白线到开始转向延时
-#define BEFORE_TURN_DELAY 775
-//从开始转向到转向结束延时
-#define AFTER_TURN_DELAY 1130
+//（前进转）从触碰白线到开始转向延时
+#define BEFORE_FORTURN_DELAY 700
+//（后退转）从触碰白线到开始转向延时
+#define BEFORE_BACKTURN_DELAY 700
+
+//开始转到开始检测是否摆正的延时
+#define BEFORE_CHECK_STRAIGHT_DELAY 700
 
 //修正循迹时单侧减速比率
-#define LINE_FIX_SPEED_RATE 0.8
+#define LINE_FIX_SPEED_RATE 0.4
 //低速重新寻线时减速比率
-#define LINE_FIND_SPEED_RATE 0.5
+#define LINE_FIND_SPEED_RATE 0.3
 //***************************************************************************************
 
 
 //****************************************全局变量****************************************
+// GND Pins
+uint8_t gnd_pins[4] = {14, 15, 16, 17};
+
 //数组位置标记
 int passed_flag = 0;
 int next_flag = 1;
@@ -103,6 +109,9 @@ bool is_carry = false;
 
 
 //****************************************自定函数****************************************
+//设置接口低电平作为额外地
+void SetGNDPins(void);
+
 //在开始运行前依次检测各灰度传感器下方黑白是否正常，若不正常，异常传感器闪烁，程序不继续进行
 void CheckGrayStatus(void);
 
@@ -180,6 +189,8 @@ void setup()
     Serial.begin(DEBUG_BAUT_RATE);
     Serial.println("#TAICHI: ======================setup()=====================");
     #endif
+
+    SetGNDPins();
 
     move.Stop();
     servo.StopAndReset();
@@ -359,10 +370,23 @@ void loop()
 }
 
 
+//设置接口低电平作为额外地
+void SetGNDPins(void)
+{
+    int pin_num = sizeof(gnd_pins) / sizeof(uint8_t);
+
+    for (int i = 0; i < pin_num; i++)
+    {
+        pinMode(gnd_pins[i], OUTPUT);
+        digitalWrite(gnd_pins[i], LOW);
+    }
+}
+
+
 //在开始运行前依次检测各灰度传感器下方黑白是否正常，若不正常，异常传感器闪烁，程序不继续进行
 void CheckGrayStatus(void)
 {
-    //若正常，1 2 5 6 号传感器检测到黑色，3 4 号传感器检测到白色
+    //若正常，1 2 5 6 号传感器检测到黑色，3 4 7 号传感器检测到白色
     bool is_status_right = false;
 
     while (!is_status_right)
@@ -379,6 +403,8 @@ void CheckGrayStatus(void)
             sensor.FlashGraySensor(GRAY_5);
         else if (sensor.IsWhite(GRAY_6))
             sensor.FlashGraySensor(GRAY_6);
+        else if (!sensor.IsWhite(GRAY_7))
+            sensor.FlashGraySensor(GRAY_7);
         else is_status_right = true;
     }
 
@@ -590,7 +616,6 @@ void LineBackward(uint8_t end_position, float speed_rate)
             move.Forward(LINE_FIND_SPEED_RATE);
         }
 
-
         if (end_position == FRONT_END) //前端接触线离开函数
         {
             if (sensor.IsWhite(GRAY_1) && sensor.IsWhite(GRAY_2))
@@ -645,9 +670,15 @@ void TurnDirection(float speed_rate)
     }
     else //继续转向
     {
-        delay(BEFORE_TURN_DELAY);
+        if (direction == FORLEFTWARD || direction == FORRIGHTWARD)
+            delay(BEFORE_FORTURN_DELAY);
+        else delay(BEFORE_BACKTURN_DELAY);
+
         move.MoveDirection(direction, speed_rate);
-        delay(AFTER_TURN_DELAY);
+
+        //等待一定时间后检测是否摆正
+        delay(BEFORE_CHECK_STRAIGHT_DELAY);
+        while (!sensor.IsWhite(GRAY_7)) {}
     }
 
     #ifdef TAICHI_DEBUG
