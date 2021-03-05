@@ -681,11 +681,14 @@ bool CatchAndCheck(float speed)
             Serial.print(" catch_times: "); Serial.println((int)catch_times);
             #endif
 
-            if (catch_times == MAX_CATCH_TIMES) //达到最大尝试次数，返回
-                return false;
-            
             //停止动作组运行
             servo.StopActionGroup();
+
+            if (catch_times == MAX_CATCH_TIMES) //达到最大尝试次数，返回
+            {
+                servo.Reset();
+                return false;
+            }
 
             //打开爪子
             if(!OpenClawAndCheck()) //未能打开爪子
