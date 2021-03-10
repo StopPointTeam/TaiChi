@@ -347,9 +347,6 @@ void loop()
         //停止前进
         move.Stop();
         delay(RELEASE_STOP_DELAY_TIME);
-
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //route[4][2] = CATCH_POINT;
     }
     //情况四：刚完整经过释放点（使用机械臂）或增益抓取点，下一个点为普通点
     else if ((passed_flag_type == RELEASE_POINT || passed_flag_type == GAIN_POINT) && next_flag_type == NORMAL_POINT)
