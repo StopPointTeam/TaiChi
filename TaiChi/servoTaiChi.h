@@ -36,8 +36,11 @@
 
 //动作组
 #define ACTION_RESET_NUM 99
-#define ACTION_CATCH_NUM 100
-#define ACTION_RELEASE_NUM 101
+#define ACTION_DOWN_NUM 100
+#define ACTION_CATCH_NUM 101
+#define ACTION_RELEASE_NUM 102
+#define ACTION_GAINDOWN_NUM 103
+#define ACTION_GAINCATCH_NUM 104
 
 
 //默认动作组速度
@@ -60,8 +63,11 @@ public:
     void OpenClaw(void); //打开爪子
 
     void Reset(float speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
+    void Down(float speed = SERVO_NORMAL_SPEED); //放下爪子，指定速度
     void Catch(float speed = SERVO_NORMAL_SPEED); //抓取，指定速度
     void Release(float speed = SERVO_NORMAL_SPEED); //释放，指定速度
+    void GainDown(float speed = SERVO_NORMAL_SPEED); //增益点放下爪子，指定速度
+    void GainCatch(float speed = SERVO_NORMAL_SPEED); //增益点抓取，指定速度
     void StopAndReset(float speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
 
 private:

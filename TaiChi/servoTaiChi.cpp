@@ -142,6 +142,14 @@ void Servo::Reset(float speed)
 }
 
 
+ //放下爪子，指定速度
+void Servo::Down(float speed)
+{
+    SetActionGroupSpeed(ACTION_DOWN_NUM, speed);
+    RunActionGroup(ACTION_DOWN_NUM, 1);
+}
+
+
 //抓取，指定速度
 void Servo::Catch(float speed)
 {
@@ -155,6 +163,22 @@ void Servo::Release(float speed)
 {
     SetActionGroupSpeed(ACTION_RELEASE_NUM, speed);
     RunActionGroup(ACTION_RELEASE_NUM, 1);
+}
+
+
+//增益点放下爪子，指定速度
+void Servo::GainDown(float speed = SERVO_NORMAL_SPEED)
+{
+    SetActionGroupSpeed(ACTION_GAINDOWN_NUM, speed);
+    RunActionGroup(ACTION_GAINDOWN_NUM, 1);
+}
+
+
+//增益点抓取，指定速度
+void Servo::GainCatch(float speed = SERVO_NORMAL_SPEED)
+{
+    SetActionGroupSpeed(ACTION_GAINCATCH_NUM, speed);
+    RunActionGroup(ACTION_GAINCATCH_NUM, 1);
 }
 
 
