@@ -15,6 +15,7 @@ Servo servo; //舵机实例
 #define RELEASE_POINT 2 //释放点（使用机械臂）
 #define CARRY_POINT 3 //携带点（从底盘）
 #define GETOUT_POINT 4 //释放点（从底盘）
+#define GAIN_POINT 5 //增益点
 
 //坐标点数组定义
 #define X 0
@@ -25,63 +26,61 @@ int8_t route[][3] =
 {
     {0, 0, NORMAL_POINT},
     {0, 1, NORMAL_POINT},
-    {1, 1, CARRY_POINT},
-    {2, 1, NORMAL_POINT},
-    {2, 2, CATCH_POINT},
-    {2, 3, NORMAL_POINT},
-    {3, 3, GETOUT_POINT},
-    {2, 3, NORMAL_POINT},
-    {2, 4, NORMAL_POINT},
-    {3, 4, RELEASE_POINT},
-    {2, 4, NORMAL_POINT},
-    {2, 3, NORMAL_POINT},
-    {1, 3, NORMAL_POINT},
-    {0, 3, NORMAL_POINT},
-    {0, 2, CATCH_POINT},
-    {1, 2, NORMAL_POINT},
-    {2, 2, NORMAL_POINT},
-    {3, 2, RELEASE_POINT},
-    {2, 2, NORMAL_POINT},
-    {2, 3, NORMAL_POINT},
-    {3, 3, GETOUT_POINT},
-    {2, 3, NORMAL_POINT}
+    {0, 2, NORMAL_POINT},
+    {-1, 2, NORMAL_POINT},
+    {-1, 1, CATCH_POINT},
+    {0, 1, NORMAL_POINT},
+    {0, 0, NORMAL_POINT},
+    {-1, 0, RELEASE_POINT}
 };
 //***************************************************************************************
 
 
 //****************************************可调参数****************************************
+//是否关闭爪子状态检测功能
+#define DISABLE_CLAW_CHECK
+
 //抓取点移动用时
-#define CATCH_MOVE_DELAY_TIME 700
-//释放点移动用时
-#define RELEASE_MOVE_DELAY_TIME 700
+#define CATCH_MOVE_DELAY_TIME 500
+//释放点向前移动用时
+#define RELEASE_MOVE_FORWARD_DELAY_TIME 1000
+//释放点暂停用时
+#define RELEASE_STOP_DELAY_TIME 500
+//释放点向后向前移动用时
+#define RELEASE_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 460
+//增益点向后向前移动用时
+#define GAIN_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 460
+//增益点稍稍向前移动用时
+#define GAIN_MOVE_LITTLEFORWARD_DELAY_TIME 200
 
 //重置留时
-#define RESET_DELAY_TIME 5000
+#define RESET_DELAY_TIME 1600
+//放下爪子用时
+#define DOWN_DELAY_TIME 1600
 //抓取留时
-#define CATCH_DELAY_TIME 5000
+#define CATCH_DELAY_TIME 2100
 //释放留时
-#define RELEASE_DELAY_TIME 5000
+#define RELEASE_DELAY_TIME 3100
+//增益放下爪子用时
+#define GAINDOWN_DELAY_TIME 1600
+//增益抓取用时
+#define GAINCATCH_DELAY_TIME 3100
 
 //最大抓取尝试次数
 #define MAX_CATCH_TIMES 2
 
 //（前进转）从触碰白线到开始转向延时
-#define BEFORE_FORTURN_DELAY 700
+#define BEFORE_FORTURN_DELAY 670
 //（后退转）从触碰白线到开始转向延时
-#define BEFORE_BACKTURN_DELAY 700
+#define BEFORE_BACKTURN_DELAY 500
 
 //开始转到开始检测是否摆正的延时
 #define BEFORE_CHECK_STRAIGHT_DELAY 700
-
-//修正循迹时单侧减速比率
-#define LINE_FIX_SPEED_RATE 0.4
-//低速重新寻线时减速比率
-#define LINE_FIND_SPEED_RATE 0.3
 //***************************************************************************************
 
 
 //****************************************全局变量****************************************
-// GND Pins
+//GND Pins
 uint8_t gnd_pins[4] = {14, 15, 16, 17};
 
 //数组位置标记
@@ -123,6 +122,9 @@ void UpdateFlag(uint8_t jump_choice = NO_JUMP);
 //计算方向，同时更改完成转向后相对下一点的朝向
 uint8_t CalcDirection(void);
 
+//由灰度比计算修正减速比
+float CalcFixSpeedRate(float gray_deviation_rate);
+
 #define FRONT_END 0
 #define BACK_END 1
 #define CATCH_END 2
@@ -136,8 +138,10 @@ void LineBackward(uint8_t end_position, float speed_rate = 1.0);
 //直行或后退或转向，完成后离开函数但不停止。会自动跳过无需前往的释放点
 void TurnDirection(float speed_rate = 1.0);
 
+#define CATCH_TYPE_CATCH 0
+#define CATCH_TYPE_GAIN 1
 //抓取环，并判定是否抓取成功
-bool CatchAndCheck(float speed = 1.0);
+bool CatchAndCheck(uint8_t type = CATCH_TYPE_CATCH, float speed = 1.0);
 
 //打开爪子，并判断爪子是否能正常工作
 bool OpenClawAndCheck(void);
@@ -159,7 +163,19 @@ int loop_time = 0;
 //中断函数，用于调试时暂停程序
 void DebugPause(void)
 {
+    //记录之前的运动状态
+    uint8_t current_direction = move.GetCurrentMove(); //当前运动状态
+    float current_speed_rate = move.GetCurrentSpeedRate(); //当前运动速度比率
+    float current_turn_speed_rate = move.GetCurrentTurnSpeedRate(); //当前转向时一侧减速的比率
+
+    //停止运动
+    move.Stop();
+    
+    //等待低电平结束
     while (digitalRead(DEBUG_PAUSE_PIN) == LOW) {}
+
+    //恢复之前的运动
+    move.MoveDirection(current_direction, current_speed_rate, current_turn_speed_rate);
 }
 
 //错误消息函数，用于在出现致命错误后结束程序
@@ -266,6 +282,11 @@ void loop()
 
         if (!is_claw_catch && is_claw_ok) //爪子上无环且状态正常
         {
+            move.Stop(); //停止前进
+
+            servo.Down(); //放下爪子
+            delay(DOWN_DELAY_TIME);
+            
             //沿线直行，在抓取位置离开函数
             LineForward(CATCH_END);
 
@@ -274,7 +295,7 @@ void loop()
 
             //抓取
             if (!CatchAndCheck())
-                is_carry = true; //抓取失败
+                is_carry = true; //抓取失败，视为底盘携带
         }
         else //未进行抓取
         {
@@ -293,10 +314,18 @@ void loop()
     //情况三：刚完整经过普通点，下一个点为释放点（使用机械臂）
     else if (passed_flag_type == NORMAL_POINT && next_flag_type == RELEASE_POINT)
     {
-        //沿线直行，在释放位置离开函数
+        //沿线直行，在释放柱离开函数
         LineForward(RELEASE_END);
 
         //停止前进
+        move.Stop();
+        delay(RELEASE_STOP_DELAY_TIME);
+
+        //无循迹后退到真实释放位置
+        move.Backward();
+        delay(RELEASE_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME);
+
+        //停止后退
         move.Stop();
 
         //释放
@@ -304,21 +333,32 @@ void loop()
         delay(RELEASE_DELAY_TIME); //释放留时
         is_claw_catch = false;
 
-        //下一点朝向为后
-        next_position = BACK_NEXT;
-    }
-    //情况四：刚完整经过释放点（使用机械臂），下一个点为普通点
-    else if (passed_flag_type == RELEASE_POINT && next_flag_type == NORMAL_POINT)
-    {
-        //沿线后退，到后端传感器接触下一条线离开函数
-        LineBackward(BACK_END);
-
-        //停止后退
-        move.Stop();
-
         //机械臂复原
         servo.Reset();
-        delay(RESET_DELAY_TIME); //复原留时
+        delay(RESET_DELAY_TIME);
+
+        //无循迹前进到释放柱
+        move.Forward();
+        delay(RELEASE_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME);
+
+        //下一点朝向为后
+        next_position = BACK_NEXT;
+
+        //停止前进
+        move.Stop();
+        delay(RELEASE_STOP_DELAY_TIME);
+
+        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //route[4][2] = CATCH_POINT;
+    }
+    //情况四：刚完整经过释放点（使用机械臂）或增益抓取点，下一个点为普通点
+    else if ((passed_flag_type == RELEASE_POINT || passed_flag_type == GAIN_POINT) && next_flag_type == NORMAL_POINT)
+    {
+        //底盘携带清空
+        is_carry = false;
+        
+        //沿线后退，到后端传感器接触下一条线离开函数
+        LineBackward(BACK_END);
 
         //继续后退或转向
         TurnDirection();
@@ -341,6 +381,7 @@ void loop()
         //沿线后退，到前端传感器接触线离开函数
         LineBackward(FRONT_END);
 
+        //底盘携带清空
         is_carry = false;
         
         //沿线后退，到后端传感器接触线离开函数
@@ -348,6 +389,57 @@ void loop()
 
         //继续后退或转向
         TurnDirection();
+    }
+    //情况七：刚完整经过普通点，下一个点为增益抓取点
+    else if (passed_flag_type == NORMAL_POINT && next_flag_type == GAIN_POINT)
+    {
+        if (!is_claw_ok) //爪子状态不正常
+        {  
+            move.Stop(); //停止前进
+            OpenClawAndCheck(); //再次检测爪子是否正常
+        }
+
+        if (is_claw_ok) //爪子状态正常
+        {
+            //沿线直行，在释放柱（增益柱）离开函数
+            LineForward(RELEASE_END);
+
+            //停止前进
+            move.Stop();
+            delay(RELEASE_STOP_DELAY_TIME);
+
+            //无循迹后退到真实抓取位置
+            move.Backward();
+            delay(GAIN_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME);
+
+            //停止后退
+            move.Stop();
+
+            //放下爪子
+            servo.GainDown();
+            delay(GAINDOWN_DELAY_TIME);
+
+            //稍稍无循迹前进
+            move.Forward();
+            delay(GAIN_MOVE_LITTLEFORWARD_DELAY_TIME);
+
+            //停止前进
+            move.Stop();
+
+            //抓取
+            CatchAndCheck(CATCH_TYPE_GAIN);
+
+            //无循迹前进到释放柱（增益柱）
+            move.Forward();
+            delay(GAIN_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME);
+        }
+
+        //下一点朝向为后
+        next_position = BACK_NEXT;
+
+        //停止前进
+        move.Stop();
+        delay(RELEASE_STOP_DELAY_TIME);
     }
     //出现错误
     else 
@@ -526,6 +618,13 @@ uint8_t CalcDirection(void)
 }
 
 
+//由灰度比计算修正减速比
+float CalcFixSpeedRate(float gray_deviation_rate)
+{
+    return -50.0 * pow((gray_deviation_rate - 1.0), 2.0) + 1.0;
+}
+
+
 //沿线直行，在触发条件后离开函数但不停止
 void LineForward(uint8_t end_position, float speed_rate)
 {
@@ -538,16 +637,18 @@ void LineForward(uint8_t end_position, float speed_rate)
 
     //记录开始时间
     unsigned long begin_time = millis();
+    //记录灰度传感器匹配次数
+    uint8_t gray_match_time = 0;
 
     while(1)
     {
         if (!sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //左侧越线
         {
-            move.ForRightward(speed_rate, LINE_FIX_SPEED_RATE);
+            move.ForRightward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_3)));
         }
         else if (sensor.IsWhite(GRAY_3) && !sensor.IsWhite(GRAY_4)) //右侧越线
         {
-            move.ForLeftward(speed_rate, LINE_FIX_SPEED_RATE);
+            move.ForLeftward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_4)));
         }
         else if (sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //在白线上
         {
@@ -555,18 +656,18 @@ void LineForward(uint8_t end_position, float speed_rate)
         }
         else //均不符合，则低速后退，尝试回到白线上
         {
-            move.Backward(LINE_FIND_SPEED_RATE);
+            //move.Backward(LINE_FIND_SPEED_RATE);
         }
 
         if (end_position == FRONT_END) //前端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_1) && sensor.IsWhite(GRAY_2))
-                break;
+            if (sensor.IsWhite(GRAY_1) || sensor.IsWhite(GRAY_2))
+                gray_match_time++;
         }
         else if (end_position == BACK_END) //后端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_5) && sensor.IsWhite(GRAY_6))
-                break;
+            if (sensor.IsWhite(GRAY_5) || sensor.IsWhite(GRAY_6))
+                gray_match_time++;
         }
         else if (end_position == CATCH_END) //到达抓取位置离开函数
         {
@@ -575,9 +676,13 @@ void LineForward(uint8_t end_position, float speed_rate)
         }
         else //到达释放位置离开函数
         {
-            if (millis() - begin_time > RELEASE_MOVE_DELAY_TIME)
+            if (millis() - begin_time > RELEASE_MOVE_FORWARD_DELAY_TIME)
                 break;
         }
+
+        //对应前端接触线离开函数和后端接触线离开函数的情况
+        if (gray_match_time == 2)
+            break;
     }
 
     #ifdef TAICHI_DEBUG
@@ -597,15 +702,18 @@ void LineBackward(uint8_t end_position, float speed_rate)
     Serial.println((int)end_position);
     #endif
 
+    //记录灰度传感器匹配次数
+    uint8_t gray_match_time = 0;
+
     while(1)
     {
         if (!sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //左侧越线
         {
-            move.BackRightward(speed_rate, LINE_FIX_SPEED_RATE);
+            move.BackRightward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_3)));
         }
         else if (sensor.IsWhite(GRAY_3) && !sensor.IsWhite(GRAY_4)) //右侧越线
         {
-            move.BackLeftward(speed_rate, LINE_FIX_SPEED_RATE);
+            move.BackLeftward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_4)));
         }
         else if (sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //在白线上
         {
@@ -613,19 +721,23 @@ void LineBackward(uint8_t end_position, float speed_rate)
         }
         else //均不符合，则低速前进，尝试回到白线上
         {
-            move.Forward(LINE_FIND_SPEED_RATE);
+            //move.Forward(LINE_FIND_SPEED_RATE);
         }
 
         if (end_position == FRONT_END) //前端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_1) && sensor.IsWhite(GRAY_2))
-                break;
+            if (sensor.IsWhite(GRAY_1) || sensor.IsWhite(GRAY_2))
+                gray_match_time++;
         }
         else //后端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_5) && sensor.IsWhite(GRAY_6))
-                break;
+            if (sensor.IsWhite(GRAY_5) || sensor.IsWhite(GRAY_6))
+                gray_match_time++;
         }
+
+        //对应前端接触线离开函数和后端接触线离开函数的情况
+        if (gray_match_time == 2)
+            break;
     }
 
     #ifdef TAICHI_DEBUG
@@ -638,15 +750,18 @@ void LineBackward(uint8_t end_position, float speed_rate)
 //直行或后退或转向，完成后离开函数但不停止。会自动跳过无需前往的释放点
 void TurnDirection(float speed_rate)
 {    
-    //若下下点为释放点，判断是否需要跳过
-    if ((route[next_next_flag][TYPE] == RELEASE_POINT && (!is_claw_catch || is_carry)) || (route[next_next_flag][TYPE] == GETOUT_POINT && !is_carry))
+    //若下下点为释放点或增益抓取点，判断是否需要跳过
+    if ((route[next_next_flag][TYPE] == RELEASE_POINT && (!is_claw_catch || is_carry)) 
+        || (route[next_next_flag][TYPE] == GETOUT_POINT && !is_carry)
+        || (route[next_next_flag][TYPE] == GAIN_POINT && is_claw_catch)
+        )
     {
         UpdateFlag(JUMP_DEAD_ROAD);
 
         #ifdef TAICHI_DEBUG
         //调试输出直行或后退或转向状态
-        Serial.println("#TAICHI: JUMP THE RELEASE/GETOUT POINT FOR NOTHING CARRIED");
-         #endif
+        Serial.println("#TAICHI: JUMP THE RELEASE/GETOUT/GAIN POINT FOR STATUS REASON");
+        #endif
     }
     
     uint8_t direction = CalcDirection();
@@ -670,10 +785,12 @@ void TurnDirection(float speed_rate)
     }
     else //继续转向
     {
+        //等待小车旋转中心与十字中心重合
         if (direction == FORLEFTWARD || direction == FORRIGHTWARD)
             delay(BEFORE_FORTURN_DELAY);
         else delay(BEFORE_BACKTURN_DELAY);
 
+        //旋转
         move.MoveDirection(direction, speed_rate);
 
         //等待一定时间后检测是否摆正
@@ -689,21 +806,31 @@ void TurnDirection(float speed_rate)
 
 
 //抓取环，并判定是否抓取成功
-bool CatchAndCheck(float speed)
+bool CatchAndCheck(uint8_t type, float speed)
 {
     //记录开始时间
     unsigned long begin_time = millis();
 
+    //抓取延时
+    int catch_delay_time;
+
     //抓取次数
     uint8_t catch_times = 0;
+
+    if (type == CATCH_TYPE_CATCH)
+        catch_delay_time = CATCH_DELAY_TIME;
+    else catch_delay_time = GAINCATCH_DELAY_TIME;
     
     //执行抓取动作
-    servo.Catch(speed);
+    if (type == CATCH_TYPE_CATCH)
+        servo.Catch(speed);
+    else servo.GainCatch(speed);
     catch_times++;
 
     //等待完成动作
-    while (millis() - begin_time < CATCH_DELAY_TIME)
+    while (millis() - begin_time < catch_delay_time)
     {
+        #ifndef DISABLE_CLAW_CHECK
         if (sensor.IsPushed(BUTTON_1)) //开关 1 闭合，即爪子两端接触，说明抓取失败
         {
             #ifdef TAICHI_DEBUG
@@ -711,6 +838,9 @@ bool CatchAndCheck(float speed)
             Serial.print("#TAICHI: **********FAIL CATCH!**********");
             Serial.print(" catch_times: "); Serial.println((int)catch_times);
             #endif
+
+            if (type == CATCH_TYPE_GAIN)
+                delay(millis() - begin_time - catch_delay_time); //等待运行完成，防止卡住
 
             //停止动作组运行
             servo.StopActionGroup();
@@ -729,14 +859,26 @@ bool CatchAndCheck(float speed)
             begin_time = millis();
 
             //执行抓取动作
-            servo.Catch(speed);
+            if (type == CATCH_TYPE_CATCH)
+                servo.Catch(speed);
+            else servo.GainCatch(speed);
             catch_times++;
         }
+        #endif
     }
 
+    #ifndef DISABLE_CLAW_CHECK
     #ifdef TAICHI_DEBUG
     //调试输出成功信息
     Serial.println("#TAICHI: SUCCUESS CATCH!");
+    #endif
+    #endif
+
+    #ifdef DISABLE_CLAW_CHECK
+    #ifdef TAICHI_DEBUG
+    //调试输出结束信息
+    Serial.println("#TAICHI: CATCH WITHOUT CHECK!");
+    #endif
     #endif
 
     is_claw_catch = true;
@@ -747,6 +889,16 @@ bool CatchAndCheck(float speed)
 //打开爪子，并判断爪子是否能正常工作
 bool OpenClawAndCheck(void)
 {
+    #ifdef DISABLE_CLAW_CHECK
+    #ifdef TAICHI_DEBUG
+    //调试输出信息
+    Serial.println("#TAICHI: DISABLE CLAW CHECK!");
+    #endif
+
+    is_claw_ok = true;
+    return true;
+    #endif
+    
     //记录开始时间
     unsigned long begin_time = millis();
 
