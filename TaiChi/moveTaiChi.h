@@ -59,6 +59,7 @@ public:
 
     uint8_t GetCurrentMove(void); //获取当前运动方向
     float GetCurrentSpeedRate(void); //获取当前运动速度比率
+    float GetCurrentTurnSpeedRate(void); //获取当前转向时一侧减速的比率
 
     void Wheel(uint8_t wheel, uint8_t rotation, float speed_rate = 1.0); //控制某个轮子转动
 
@@ -74,8 +75,9 @@ public:
 
 private:
     float global_speed_rate; //全局速度比率
-    uint8_t current_move; //当前运动状态
+    uint8_t current_direction; //当前运动状态
     float current_speed_rate; //当前运动速度比率
+    float current_turn_speed_rate; //当前转向时一侧减速的比率
 };
 
 

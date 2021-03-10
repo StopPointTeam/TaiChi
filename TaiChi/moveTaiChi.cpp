@@ -6,7 +6,7 @@
 Move::Move()
 {
     global_speed_rate = DEFAULT_GLOBAL_SPEED_RATE;
-    current_move = STOP;
+    current_direction = STOP;
     current_speed_rate = 0.0;
 }
 
@@ -29,7 +29,7 @@ void Move::SetGlobalSpeedRate(float global_speed_rate)
 //获取当前运动方向
 uint8_t Move::GetCurrentMove(void)
 {
-    return current_move;
+    return current_direction;
 }
 
 
@@ -37,6 +37,13 @@ uint8_t Move::GetCurrentMove(void)
 float Move::GetCurrentSpeedRate(void)
 {
     return current_speed_rate;
+}
+
+
+//获取当前转向时一侧减速的比率
+float Move::GetCurrentTurnSpeedRate(void)
+{
+    return current_turn_speed_rate;
 }
 
 
@@ -106,7 +113,7 @@ void Move::Forward(float speed_rate)
     Wheel(RIGHT_A_WHEEL, FORWARD_ROTATION, speed_rate);
     Wheel(RIGHT_B_WHEEL, FORWARD_ROTATION, speed_rate);
 
-    current_move = FORWARD;
+    current_direction = FORWARD;
     current_speed_rate = speed_rate;
 
     #ifdef MOVE_DEBUG
@@ -125,7 +132,7 @@ void Move::Backward(float speed_rate)
     Wheel(RIGHT_A_WHEEL, BACKWARD_ROTATION, speed_rate);
     Wheel(RIGHT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
 
-    current_move = BACKWARD;    
+    current_direction = BACKWARD;    
     current_speed_rate = speed_rate;
 
     #ifdef MOVE_DEBUG
@@ -144,8 +151,9 @@ void Move::ForLeftward(float speed_rate, float turn_speed_rate)
     Wheel(RIGHT_A_WHEEL, FORWARD_ROTATION, speed_rate);
     Wheel(RIGHT_B_WHEEL, FORWARD_ROTATION, speed_rate);
 
-    current_move = FORLEFTWARD;
+    current_direction = FORLEFTWARD;
     current_speed_rate = speed_rate;
+    current_turn_speed_rate = turn_speed_rate;
 
     #ifdef MOVE_DEBUG
     //调试输出向前左转状态
@@ -163,8 +171,9 @@ void Move::ForRightward(float speed_rate, float turn_speed_rate)
     Wheel(RIGHT_A_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
     Wheel(RIGHT_B_WHEEL, FORWARD_ROTATION, turn_speed_rate * speed_rate);
 
-    current_move = FORRIGHTWARD;   
+    current_direction = FORRIGHTWARD;   
     current_speed_rate = speed_rate;
+    current_turn_speed_rate = turn_speed_rate;
 
     #ifdef MOVE_DEBUG
     //调试输出向前右转状态
@@ -182,8 +191,9 @@ void Move::BackLeftward(float speed_rate, float turn_speed_rate)
     Wheel(RIGHT_A_WHEEL, BACKWARD_ROTATION, speed_rate);
     Wheel(RIGHT_B_WHEEL, BACKWARD_ROTATION, speed_rate);
 
-    current_move = BACKLEFTWARD;    
+    current_direction = BACKLEFTWARD;    
     current_speed_rate = speed_rate;
+    current_turn_speed_rate = turn_speed_rate;
 
     #ifdef MOVE_DEBUG
     //调试输出向后左转状态
@@ -201,8 +211,9 @@ void Move::BackRightward(float speed_rate, float turn_speed_rate)
     Wheel(RIGHT_A_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
     Wheel(RIGHT_B_WHEEL, BACKWARD_ROTATION, turn_speed_rate * speed_rate);
 
-    current_move = BACKRIGHTWARD;     
+    current_direction = BACKRIGHTWARD;     
     current_speed_rate = speed_rate;
+    current_turn_speed_rate = turn_speed_rate;
 
     #ifdef MOVE_DEBUG
     //调试输出向后右转状态
@@ -220,7 +231,7 @@ void Move::Stop(void)
     Wheel(RIGHT_A_WHEEL, STOP_ROTATION);
     Wheel(RIGHT_B_WHEEL, STOP_ROTATION);  
 
-    current_move = STOP;
+    current_direction = STOP;
     current_speed_rate = 0;
 
     #ifdef MOVE_DEBUG
