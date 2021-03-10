@@ -25,13 +25,13 @@
 #define GRAY_7_VCC 47
 
 //灰度传感器临界值
-#define GRAY_1_GATE 740
-#define GRAY_2_GATE 740
-#define GRAY_3_GATE 740
-#define GRAY_4_GATE 740
-#define GRAY_5_GATE 740
-#define GRAY_6_GATE 740
-#define GRAY_7_GATE 790
+#define GRAY_1_GATE 900
+#define GRAY_2_GATE 900
+#define GRAY_3_GATE 850
+#define GRAY_4_GATE 850
+#define GRAY_5_GATE 900
+#define GRAY_6_GATE 880
+#define GRAY_7_GATE 802
 
 //灰度传感器闪烁时间
 #define GRAY_FLASH_TIME 200
@@ -68,6 +68,9 @@ public:
 
     //灰度传感器判断下方是否为白色
     bool IsWhite(uint8_t gray_sensor_num);
+
+    //灰度传感器灰度值偏离比例，即 (gray_gate - gray_val) / gray_gate
+    float GrayDeviationRate(uint8_t gray_sensor_num);
 
     //碰撞传感器（开关）判断是否闭合
     bool IsPushed(uint8_t button_num);
