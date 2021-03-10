@@ -115,6 +115,7 @@ void Move::Forward(float speed_rate)
 
     current_direction = FORWARD;
     current_speed_rate = speed_rate;
+    current_turn_speed_rate = 1.0;
 
     #ifdef MOVE_DEBUG
     //调试输出前进状态
@@ -134,6 +135,7 @@ void Move::Backward(float speed_rate)
 
     current_direction = BACKWARD;    
     current_speed_rate = speed_rate;
+    current_turn_speed_rate = 1.0;
 
     #ifdef MOVE_DEBUG
     //调试输出后退状态
@@ -233,6 +235,7 @@ void Move::Stop(void)
 
     current_direction = STOP;
     current_speed_rate = 0;
+    current_turn_speed_rate = 1.0;
 
     #ifdef MOVE_DEBUG
     //调试输出制动状态
