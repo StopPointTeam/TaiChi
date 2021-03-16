@@ -182,6 +182,14 @@ void Servo::GainCatch(float speed = SERVO_NORMAL_SPEED)
 }
 
 
+//增益点抬升，指定速度
+void Servo::GainUp(float speed)
+{
+    SetActionGroupSpeed(ACTION_GAINUP_NUM, speed);
+    RunActionGroup(ACTION_GAINUP_NUM, 1);
+}
+
+
 //停止舵机并恢复初始状态，指定速度
 void Servo::StopAndReset(float speed)
 {

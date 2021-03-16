@@ -41,6 +41,7 @@
 #define ACTION_RELEASE_NUM 102
 #define ACTION_GAINDOWN_NUM 103
 #define ACTION_GAINCATCH_NUM 104
+#define ACTION_GAINUP_NUM 105
 
 
 //默认动作组速度
@@ -68,6 +69,7 @@ public:
     void Release(float speed = SERVO_NORMAL_SPEED); //释放，指定速度
     void GainDown(float speed = SERVO_NORMAL_SPEED); //增益点放下爪子，指定速度
     void GainCatch(float speed = SERVO_NORMAL_SPEED); //增益点抓取，指定速度
+    void GainUp(float speed = SERVO_NORMAL_SPEED); //增益点抬升，指定速度
     void StopAndReset(float speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
 
 private:
