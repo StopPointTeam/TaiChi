@@ -28,7 +28,15 @@ int8_t route[][3] =
     {0, 1, NORMAL_POINT},
     {0, 2, NORMAL_POINT},
     {-1, 2, NORMAL_POINT},
-    {-1, 1, CATCH_POINT},
+    {-1, 1, NORMAL_POINT},
+    {0, 1, NORMAL_POINT},
+    {0, 0, NORMAL_POINT},
+    {-1, 0, GAIN_POINT},
+    {0, 0, NORMAL_POINT},
+    {0, 1, NORMAL_POINT},
+    {0, 2, NORMAL_POINT},
+    {-1, 2, NORMAL_POINT},
+    {-1, 1, NORMAL_POINT},
     {0, 1, NORMAL_POINT},
     {0, 0, NORMAL_POINT},
     {-1, 0, RELEASE_POINT}
@@ -45,13 +53,17 @@ int8_t route[][3] =
 //释放点向前移动用时
 #define RELEASE_MOVE_FORWARD_DELAY_TIME 1000
 //释放点暂停用时
-#define RELEASE_STOP_DELAY_TIME 500
+#define STOP_DELAY_TIME 500
 //释放点向后向前移动用时
 #define RELEASE_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 460
 //增益点向后向前移动用时
-#define GAIN_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 460
-//增益点稍稍向前移动用时
-#define GAIN_MOVE_LITTLEFORWARD_DELAY_TIME 200
+#define GAIN_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 750
+//增益点稍稍向前移动推环用时
+#define GAIN_MOVE_FORWARD_TO_PUSH_DELAY_TIME 200
+//增益点稍稍向后移动抓取用时
+#define GAIN_MOVE_BACKWARD_TO_CATCH_DELAY_TIME 100
+//增益点稍稍向后移动拉环用时
+#define GAIN_MOVE_BACKWARD_TO_UP_DELAY_TIME 65
 
 //重置留时
 #define RESET_DELAY_TIME 1600
@@ -64,7 +76,9 @@ int8_t route[][3] =
 //增益放下爪子用时
 #define GAINDOWN_DELAY_TIME 1600
 //增益抓取用时
-#define GAINCATCH_DELAY_TIME 3100
+#define GAINCATCH_DELAY_TIME 1600
+//增益抬起爪子用时
+#define GAINUP_DELAY_TIME 4600
 
 //最大抓取尝试次数
 #define MAX_CATCH_TIMES 2
@@ -319,7 +333,7 @@ void loop()
 
         //停止前进
         move.Stop();
-        delay(RELEASE_STOP_DELAY_TIME);
+        delay(STOP_DELAY_TIME);
 
         //无循迹后退到真实释放位置
         move.Backward();
@@ -346,7 +360,7 @@ void loop()
 
         //停止前进
         move.Stop();
-        delay(RELEASE_STOP_DELAY_TIME);
+        delay(STOP_DELAY_TIME);
     }
     //情况四：刚完整经过释放点（使用机械臂）或增益抓取点，下一个点为普通点
     else if ((passed_flag_type == RELEASE_POINT || passed_flag_type == GAIN_POINT) && next_flag_type == NORMAL_POINT)
@@ -363,6 +377,9 @@ void loop()
     //情况五：刚完整经过普通点，下一个点为释放点（从底盘）
     else if (passed_flag_type == NORMAL_POINT && next_flag_type == GETOUT_POINT)
     {
+        //沿线直行，到前端传感器接触下一条线离开函数
+        LineForward(FRONT_END);
+        
         //沿线直行，到后端传感器接触下一条线离开函数
         LineForward(BACK_END);
 
@@ -403,7 +420,7 @@ void loop()
 
             //停止前进
             move.Stop();
-            delay(RELEASE_STOP_DELAY_TIME);
+            delay(STOP_DELAY_TIME);
 
             //无循迹后退到真实抓取位置
             move.Backward();
@@ -416,15 +433,34 @@ void loop()
             servo.GainDown();
             delay(GAINDOWN_DELAY_TIME);
 
-            //稍稍无循迹前进
-            move.Forward();
-            delay(GAIN_MOVE_LITTLEFORWARD_DELAY_TIME);
+            //稍稍无循迹前进，向前推环，以约束环的位置
+            move.Forward(0.5);
+            delay(GAIN_MOVE_FORWARD_TO_PUSH_DELAY_TIME);
+
+            //停止前进
+            move.Stop();
+            delay(STOP_DELAY_TIME);
+
+            //稍稍无循迹后退，便于爪子抓取
+            move.Backward(0.5);
+            delay(GAIN_MOVE_BACKWARD_TO_CATCH_DELAY_TIME);
 
             //停止前进
             move.Stop();
 
             //抓取
             CatchAndCheck(CATCH_TYPE_GAIN);
+
+            //稍稍无循迹后退，便于爪子抬起
+            move.Backward(0.5);
+            delay(GAIN_MOVE_BACKWARD_TO_UP_DELAY_TIME);
+
+            //停止前进
+            move.Stop();
+
+            //抬起爪子
+            servo.GainUp();
+            delay(GAINUP_DELAY_TIME);
 
             //无循迹前进到释放柱（增益柱）
             move.Forward();
@@ -436,7 +472,7 @@ void loop()
 
         //停止前进
         move.Stop();
-        delay(RELEASE_STOP_DELAY_TIME);
+        delay(STOP_DELAY_TIME);
     }
     //出现错误
     else 
