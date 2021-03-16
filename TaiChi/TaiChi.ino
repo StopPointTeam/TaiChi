@@ -28,6 +28,14 @@ int8_t route[][3] =
     {0, 1, NORMAL_POINT},
     {0, 2, NORMAL_POINT},
     {-1, 2, NORMAL_POINT},
+    {-1, 1, CATCH_POINT},
+    {0, 1, NORMAL_POINT},
+    {0, 0, NORMAL_POINT},
+    {-1, 0, RELEASE_POINT},
+    {0, 0, NORMAL_POINT},
+    {0, 1, NORMAL_POINT},
+    {0, 2, NORMAL_POINT},
+    {-1, 2, NORMAL_POINT},
     {-1, 1, NORMAL_POINT},
     {0, 1, NORMAL_POINT},
     {0, 0, NORMAL_POINT},
@@ -70,7 +78,7 @@ int8_t route[][3] =
 //放下爪子用时
 #define DOWN_DELAY_TIME 1600
 //抓取留时
-#define CATCH_DELAY_TIME 2100
+#define CATCH_DELAY_TIME 600
 //释放留时
 #define RELEASE_DELAY_TIME 3100
 //增益放下爪子用时
@@ -78,7 +86,7 @@ int8_t route[][3] =
 //增益抓取用时
 #define GAINCATCH_DELAY_TIME 1600
 //增益抬起爪子用时
-#define GAINUP_DELAY_TIME 4600
+#define GAINUP_DELAY_TIME 1600
 
 //最大抓取尝试次数
 #define MAX_CATCH_TIMES 2
@@ -349,7 +357,6 @@ void loop()
 
         //机械臂复原
         servo.Reset();
-        delay(RESET_DELAY_TIME);
 
         //无循迹前进到释放柱
         move.Forward();
@@ -670,8 +677,9 @@ void LineForward(uint8_t end_position, float speed_rate)
 
     //记录开始时间
     unsigned long begin_time = millis();
-    //记录灰度传感器匹配次数
-    uint8_t gray_match_time = 0;
+    //记录灰度传感器匹配情况
+    bool gray_match_a = false;
+    bool gray_match_b = false;
 
     while(1)
     {
@@ -694,13 +702,19 @@ void LineForward(uint8_t end_position, float speed_rate)
 
         if (end_position == FRONT_END) //前端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_1) || sensor.IsWhite(GRAY_2))
-                gray_match_time++;
+            if (sensor.IsWhite(GRAY_1))
+                gray_match_a = true;
+            
+            if (sensor.IsWhite(GRAY_2))
+                gray_match_b = true;
         }
         else if (end_position == BACK_END) //后端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_5) || sensor.IsWhite(GRAY_6))
-                gray_match_time++;
+            if (sensor.IsWhite(GRAY_5))
+                gray_match_a = true;
+            
+            if (sensor.IsWhite(GRAY_6))
+                gray_match_b = true;
         }
         else if (end_position == CATCH_END) //到达抓取位置离开函数
         {
@@ -714,7 +728,7 @@ void LineForward(uint8_t end_position, float speed_rate)
         }
 
         //对应前端接触线离开函数和后端接触线离开函数的情况
-        if (gray_match_time == 2)
+        if (gray_match_a && gray_match_b)
             break;
     }
 
@@ -735,8 +749,9 @@ void LineBackward(uint8_t end_position, float speed_rate)
     Serial.println((int)end_position);
     #endif
 
-    //记录灰度传感器匹配次数
-    uint8_t gray_match_time = 0;
+    //记录灰度传感器匹配情况
+    bool gray_match_a = false;
+    bool gray_match_b = false;
 
     while(1)
     {
@@ -759,17 +774,23 @@ void LineBackward(uint8_t end_position, float speed_rate)
 
         if (end_position == FRONT_END) //前端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_1) || sensor.IsWhite(GRAY_2))
-                gray_match_time++;
+            if (sensor.IsWhite(GRAY_1))
+                gray_match_a = true;
+            
+            if (sensor.IsWhite(GRAY_2))
+                gray_match_b = true;
         }
         else //后端接触线离开函数
         {
-            if (sensor.IsWhite(GRAY_5) || sensor.IsWhite(GRAY_6))
-                gray_match_time++;
+            if (sensor.IsWhite(GRAY_5))
+                gray_match_a = true;
+            
+            if (sensor.IsWhite(GRAY_6))
+                gray_match_b = true;
         }
 
         //对应前端接触线离开函数和后端接触线离开函数的情况
-        if (gray_match_time == 2)
+        if (gray_match_a && gray_match_b)
             break;
     }
 
