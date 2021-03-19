@@ -31,7 +31,7 @@
 #define GRAY_4_GATE 850
 #define GRAY_5_GATE 900
 #define GRAY_6_GATE 880
-#define GRAY_7_GATE 802
+#define GRAY_7_GATE 690
 
 //灰度传感器闪烁时间
 #define GRAY_FLASH_TIME 200
@@ -57,6 +57,9 @@
 #define BUTTON_1 0
 #define BUTTON_2 1
 
+//HMC5883 的 I2C 地址
+#define HMC5883_ADDRESS 0x1E 
+
 
 class Sensor
 {
@@ -74,7 +77,13 @@ public:
 
     //碰撞传感器（开关）判断是否闭合
     bool IsPushed(uint8_t button_num);
-};
+
+    //开启 HMC5883 的 I2C 通讯
+    void StartHMC5883(void);
+
+    //返回朝向角
+    float GetAngle(void);
+};  
 
 
 #endif

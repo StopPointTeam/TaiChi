@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 
 #include "sensorTaiChi.h"
 
@@ -191,4 +192,53 @@ bool Sensor::IsPushed(uint8_t button_num)
     if (button_val == LOW)
         return true;
     else return false;
+}
+
+
+//开启 HMC5883 的 I2C 通讯
+void Sensor::StartHMC5883(void)
+{
+    Wire.begin();
+    Wire.beginTransmission(HMC5883_ADDRESS);
+    Wire.write(0x02);
+    Wire.write(0x00);
+    Wire.endTransmission();
+}
+
+
+//返回朝向角
+float Sensor::GetAngle(void)
+{
+    long x, y, z;
+
+    Wire.beginTransmission(HMC5883_ADDRESS);
+    Wire.write(0x03);
+    Wire.endTransmission();
+
+    Wire.requestFrom(HMC5883_ADDRESS, 6);
+    if (6 <= Wire.available())
+    {
+        x = Wire.read() << 8;
+        x |= Wire.read();
+        z = Wire.read() << 8;
+        z |= Wire.read();
+        y = Wire.read() << 8;
+        y |= Wire.read();
+    }
+
+    //计算朝向角
+    float m = sqrt(x * x + y * y);
+    float angle;
+
+    if (x >= 0)
+        angle = acos(y / m);
+    else angle = 2.0 * PI - acos(y / m);
+    
+    #ifdef SENSOR_DEBUG
+    //调试输出朝向角
+    Serial.print("#SENSOR: Angle Value: ");
+    Serial.println(angle);  
+    #endif
+
+    return angle;
 }
