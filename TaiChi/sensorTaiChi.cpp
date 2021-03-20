@@ -6,8 +6,8 @@
 
 Sensor::Sensor()
 {
-    pinMode(BUTTON_1_OUT, INPUT);
-    pinMode(BUTTON_2_OUT, INPUT);
+    pinMode(BUTTON_1_OUT, INPUT_PULLUP);
+    pinMode(BUTTON_2_OUT, INPUT_PULLUP);
 
     pinMode(GRAY_1_VCC, OUTPUT);
     digitalWrite(GRAY_1_VCC, HIGH);
@@ -35,6 +35,31 @@ Sensor::Sensor()
 
     pinMode(BUTTON_2_VCC, OUTPUT);
     digitalWrite(BUTTON_2_VCC, HIGH);
+
+    //设置灰度值为默认值
+    SetGrayGate(GRAY_1, DEFAULT_GRAY_1_GATE);
+    SetGrayGate(GRAY_2, DEFAULT_GRAY_2_GATE);
+    SetGrayGate(GRAY_3, DEFAULT_GRAY_3_GATE);
+    SetGrayGate(GRAY_4, DEFAULT_GRAY_4_GATE);
+    SetGrayGate(GRAY_5, DEFAULT_GRAY_5_GATE);
+    SetGrayGate(GRAY_6, DEFAULT_GRAY_6_GATE);
+    SetGrayGate(GRAY_7, DEFAULT_GRAY_7_GATE);
+}
+
+
+//设置灰度传感器临界值
+void Sensor::SetGrayGate(uint8_t gray_sensor_num, int gate)
+{
+    switch (gray_sensor_num)
+    {
+    case GRAY_1: gray_1_gate = gate; break;
+    case GRAY_2: gray_2_gate = gate; break;
+    case GRAY_3: gray_3_gate = gate; break;
+    case GRAY_4: gray_4_gate = gate; break;
+    case GRAY_5: gray_5_gate = gate; break;
+    case GRAY_6: gray_6_gate = gate; break;
+    case GRAY_7: gray_7_gate = gate; 
+    }
 }
 
 
@@ -80,13 +105,13 @@ bool Sensor::IsWhite(uint8_t gray_sensor_num)
     
     switch (gray_sensor_num)
     {
-    case GRAY_1: gray_out_pin = GRAY_1_OUT; gray_gate = GRAY_1_GATE; break;
-    case GRAY_2: gray_out_pin = GRAY_2_OUT; gray_gate = GRAY_2_GATE; break;
-    case GRAY_3: gray_out_pin = GRAY_3_OUT; gray_gate = GRAY_3_GATE; break;
-    case GRAY_4: gray_out_pin = GRAY_4_OUT; gray_gate = GRAY_4_GATE; break;
-    case GRAY_5: gray_out_pin = GRAY_5_OUT; gray_gate = GRAY_5_GATE; break;
-    case GRAY_6: gray_out_pin = GRAY_6_OUT; gray_gate = GRAY_6_GATE; break;
-    case GRAY_7: gray_out_pin = GRAY_7_OUT; gray_gate = GRAY_7_GATE; 
+    case GRAY_1: gray_out_pin = GRAY_1_OUT; gray_gate = gray_1_gate; break;
+    case GRAY_2: gray_out_pin = GRAY_2_OUT; gray_gate = gray_2_gate; break;
+    case GRAY_3: gray_out_pin = GRAY_3_OUT; gray_gate = gray_3_gate; break;
+    case GRAY_4: gray_out_pin = GRAY_4_OUT; gray_gate = gray_4_gate; break;
+    case GRAY_5: gray_out_pin = GRAY_5_OUT; gray_gate = gray_5_gate; break;
+    case GRAY_6: gray_out_pin = GRAY_6_OUT; gray_gate = gray_6_gate; break;
+    case GRAY_7: gray_out_pin = GRAY_7_OUT; gray_gate = gray_7_gate; 
     }
 
     gray_val = analogRead(gray_out_pin);
@@ -125,13 +150,13 @@ float Sensor::GrayDeviationRate(uint8_t gray_sensor_num)
     
     switch (gray_sensor_num)
     {
-    case GRAY_1: gray_out_pin = GRAY_1_OUT; gray_gate = GRAY_1_GATE; break;
-    case GRAY_2: gray_out_pin = GRAY_2_OUT; gray_gate = GRAY_2_GATE; break;
-    case GRAY_3: gray_out_pin = GRAY_3_OUT; gray_gate = GRAY_3_GATE; break;
-    case GRAY_4: gray_out_pin = GRAY_4_OUT; gray_gate = GRAY_4_GATE; break;
-    case GRAY_5: gray_out_pin = GRAY_5_OUT; gray_gate = GRAY_5_GATE; break;
-    case GRAY_6: gray_out_pin = GRAY_6_OUT; gray_gate = GRAY_6_GATE; break;
-    case GRAY_7: gray_out_pin = GRAY_7_OUT; gray_gate = GRAY_7_GATE; 
+    case GRAY_1: gray_out_pin = GRAY_1_OUT; gray_gate = gray_1_gate; break;
+    case GRAY_2: gray_out_pin = GRAY_2_OUT; gray_gate = gray_2_gate; break;
+    case GRAY_3: gray_out_pin = GRAY_3_OUT; gray_gate = gray_3_gate; break;
+    case GRAY_4: gray_out_pin = GRAY_4_OUT; gray_gate = gray_4_gate; break;
+    case GRAY_5: gray_out_pin = GRAY_5_OUT; gray_gate = gray_5_gate; break;
+    case GRAY_6: gray_out_pin = GRAY_6_OUT; gray_gate = gray_6_gate; break;
+    case GRAY_7: gray_out_pin = GRAY_7_OUT; gray_gate = gray_7_gate; 
     }
 
     gray_val = analogRead(gray_out_pin);
@@ -154,7 +179,6 @@ float Sensor::GrayDeviationRate(uint8_t gray_sensor_num)
     Serial.print(gray_gate);
     #endif
 
-    //deviarion_rate = (float)(gray_gate - gray_val) / gray_gate;
     deviarion_rate = (float)gray_val / gray_gate;
 
     #ifdef SENSOR_DEBUG

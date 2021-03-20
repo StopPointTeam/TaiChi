@@ -25,13 +25,13 @@
 #define GRAY_7_VCC 47
 
 //灰度传感器临界值
-#define GRAY_1_GATE 900
-#define GRAY_2_GATE 900
-#define GRAY_3_GATE 850
-#define GRAY_4_GATE 850
-#define GRAY_5_GATE 900
-#define GRAY_6_GATE 880
-#define GRAY_7_GATE 690
+#define DEFAULT_GRAY_1_GATE 900
+#define DEFAULT_GRAY_2_GATE 900
+#define DEFAULT_GRAY_3_GATE 850
+#define DEFAULT_GRAY_4_GATE 850
+#define DEFAULT_GRAY_5_GATE 900
+#define DEFAULT_GRAY_6_GATE 880
+#define DEFAULT_GRAY_7_GATE 690
 
 //灰度传感器闪烁时间
 #define GRAY_FLASH_TIME 200
@@ -66,6 +66,9 @@ class Sensor
 public:
     Sensor();
 
+    //设置灰度传感器临界值
+    void SetGrayGate(uint8_t gray_sensor_num, int gate);
+
     //使灰度传感器闪烁
     void FlashGraySensor(uint8_t gray_sensor_num);
 
@@ -83,6 +86,16 @@ public:
 
     //返回朝向角
     float GetAngle(void);
+
+private:
+    //灰度传感器临界值
+    int gray_1_gate;
+    int gray_2_gate;
+    int gray_3_gate;
+    int gray_4_gate;
+    int gray_5_gate;
+    int gray_6_gate;
+    int gray_7_gate;
 };  
 
 
