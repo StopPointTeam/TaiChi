@@ -1,11 +1,17 @@
+#include <Arduino.h>
+#include <EEPROM.h>
+#include <NeoHWSerial.h>
+
 #include "moveTaiChi.h" //轮胎运动库
 #include "sensorTaiChi.h" //传感器库
 #include "servoTaiChi.h" //舵机库
+#include "radioTaiChi.h" //通信库
 
 
 Move move; //轮胎运动实例
 Sensor sensor; //传感器实例
 Servo servo; //舵机实例
+Radio radio; //通讯实例
 
 
 //****************************************运动路径****************************************
@@ -53,6 +59,9 @@ int8_t route[][3] =
 
 
 //****************************************可调参数****************************************
+//EEPROM 写入位置
+#define EEPROM_ADDRESS 0x0
+
 //是否关闭爪子状态检测功能
 #define DISABLE_CLAW_CHECK
 
@@ -103,7 +112,31 @@ int8_t route[][3] =
 
 //****************************************全局变量****************************************
 //GND Pins
-uint8_t gnd_pins[4] = {14, 15, 16, 17};
+uint8_t gnd_pins[8] = {14, 15, 32, 33, 34, 35, 36, 37};
+
+//EEPROM 储存的调试数据
+struct StroageInfo
+{
+    float real_angle_val[8];
+    int gray_7_gate;
+    int delay_time_after_turn;
+} stroage_info;
+
+//下一点绝对朝向角
+float north_left_angle;
+float north_right_angle;
+float west_left_angle;
+float west_right_angle;
+float south_left_angle;
+float south_right_angle;
+float east_left_angle;
+float east_right_angle;
+
+//7 号传感器灰度临界值
+int gray_7_gate;
+
+//转向开始到结束的时间
+int delay_time_after_turn;
 
 //数组位置标记
 int passed_flag = 0;
@@ -118,6 +151,13 @@ int max_flag;
 //下一点朝向
 uint8_t next_position = FRONT_NEXT;
 
+#define NORTH 0
+#define WEST 1
+#define SOUTH 2
+#define EAST 3
+//下一点绝对朝向
+uint8_t current_real_direction = NORTH;
+
 //爪子是否抓有环
 bool is_claw_catch = false;
 
@@ -126,12 +166,21 @@ bool is_claw_ok = true;
 
 //底盘是否携带环
 bool is_carry = false;
+
+#define TURN_BY_TIME 0 //基于时间
+#define TURN_BY_GRAY 1 //基于灰度传感器
+#define TURN_BY_EARTH 2 //基于地磁场
+//转向方式
+uint8_t turn_method = TURN_BY_TIME;
 //***************************************************************************************
 
 
 //****************************************自定函数****************************************
 //设置接口低电平作为额外地
 void SetGNDPins(void);
+
+//从 EEPROM 读取数据
+void ReadFromEEPROM(void);
 
 //在开始运行前依次检测各灰度传感器下方黑白是否正常，若不正常，异常传感器闪烁，程序不继续进行
 void CheckGrayStatus(void);
@@ -167,6 +216,9 @@ bool CatchAndCheck(uint8_t type = CATCH_TYPE_CATCH, float speed = 1.0);
 
 //打开爪子，并判断爪子是否能正常工作
 bool OpenClawAndCheck(void);
+
+//通讯消息处理函数
+void HandleMessage(char * message);
 //***************************************************************************************
 
 
@@ -177,41 +229,21 @@ bool OpenClawAndCheck(void);
 #ifdef TAICHI_DEBUG
 
 #define DEBUG_BAUT_RATE 115200
-#define DEBUG_PAUSE_INTERRUPTNUM 2 //PIN 21
-#define DEBUG_PAUSE_PIN 21
 
 int loop_time = 0;
-
-//中断函数，用于调试时暂停程序
-void DebugPause(void)
-{
-    //记录之前的运动状态
-    uint8_t current_direction = move.GetCurrentMove(); //当前运动状态
-    float current_speed_rate = move.GetCurrentSpeedRate(); //当前运动速度比率
-    float current_turn_speed_rate = move.GetCurrentTurnSpeedRate(); //当前转向时一侧减速的比率
-
-    //停止运动
-    move.Stop();
-    
-    //等待低电平结束
-    while (digitalRead(DEBUG_PAUSE_PIN) == LOW) {}
-
-    //恢复之前的运动
-    move.MoveDirection(current_direction, current_speed_rate, current_turn_speed_rate);
-}
 
 //错误消息函数，用于在出现致命错误后结束程序
 void DebugCanNotContinue(char* message)
 {
-    Serial.print("#TAICHI: CAN NOT CONTINUE WHEN "); Serial.println(message);
-    Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
-    Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
-    Serial.print(" flag: "); Serial.print(passed_flag);
-    Serial.print(" TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
-    Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
-    Serial.print(" next_position: "); Serial.print((int)next_position);
-    Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
-    Serial.print("#TAICHI: is_claw_catch: "); Serial.print((int)is_claw_catch); Serial.print(" is_claw_ok: "); Serial.println((int)is_claw_ok);
+    NeoSerial.print("#TAICHI: CAN NOT CONTINUE WHEN "); NeoSerial.println(message);
+    NeoSerial.print("#TAICHI: loop_time: "); NeoSerial.println(loop_time);
+    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(route[passed_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[passed_flag][Y]); NeoSerial.print("]");
+    NeoSerial.print(" flag: "); NeoSerial.print(passed_flag);
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[passed_flag][TYPE]);
+    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(route[next_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[next_flag][Y]); NeoSerial.print("]");
+    NeoSerial.print(" next_position: "); NeoSerial.print((int)next_position);
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[next_flag][TYPE]);
+    NeoSerial.print("#TAICHI: is_claw_catch: "); NeoSerial.print((int)is_claw_catch); NeoSerial.print(" is_claw_ok: "); NeoSerial.println((int)is_claw_ok);
 
     while (1) {}
 }
@@ -222,16 +254,25 @@ void DebugCanNotContinue(char* message)
 void setup()
 {
     #ifdef TAICHI_DEBUG
-    pinMode(DEBUG_PAUSE_PIN, INPUT_PULLUP);
-    attachInterrupt(DEBUG_PAUSE_INTERRUPTNUM, DebugPause, LOW);
-    Serial.begin(DEBUG_BAUT_RATE);
-    Serial.println("#TAICHI: ======================setup()=====================");
+    NeoSerial.begin(DEBUG_BAUT_RATE);
+    NeoSerial.println("#TAICHI: ======================setup()=====================");
     #endif
 
     SetGNDPins();
 
     move.Stop();
+
+    servo.BeginTransmit();
     servo.StopAndReset();
+
+    radio.SetHandleMessageFunction(HandleMessage);
+    radio.BeginTransmit();
+
+    //从 EEPROM 读取数据
+    ReadFromEEPROM();
+
+    //开启 HMC5883 的 I2C 通讯
+    sensor.StartHMC5883();
 
     //在开始运行前依次检测各灰度传感器下方黑白是否正常
     CheckGrayStatus();
@@ -251,15 +292,15 @@ void loop()
 {
     #ifdef TAICHI_DEBUG
     loop_time++;
-    Serial.println("#TAICHI: ====================New loop()====================");
-    Serial.print("#TAICHI: loop_time: "); Serial.println(loop_time);
-    Serial.print("#TAICHI: pass: ["); Serial.print(route[passed_flag][X]); Serial.print(", "); Serial.print(route[passed_flag][Y]); Serial.print("]");
-    Serial.print(" flag: "); Serial.print(passed_flag);
-    Serial.print(" TYPE: "); Serial.println((int)route[passed_flag][TYPE]);
-    Serial.print("#TAICHI: next: ["); Serial.print(route[next_flag][X]); Serial.print(", "); Serial.print(route[next_flag][Y]); Serial.print("]");
-    Serial.print(" next_position: "); Serial.print((int)next_position);
-    Serial.print(" TYPE: "); Serial.println((int)route[next_flag][TYPE]);
-    Serial.print("#TAICHI: is_claw_catch: "); Serial.print((int)is_claw_catch); Serial.print(" is_claw_ok: "); Serial.println((int)is_claw_ok);
+    NeoSerial.println("#TAICHI: ====================New loop()====================");
+    NeoSerial.print("#TAICHI: loop_time: "); NeoSerial.println(loop_time);
+    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(route[passed_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[passed_flag][Y]); NeoSerial.print("]");
+    NeoSerial.print(" flag: "); NeoSerial.print(passed_flag);
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[passed_flag][TYPE]);
+    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(route[next_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[next_flag][Y]); NeoSerial.print("]");
+    NeoSerial.print(" next_position: "); NeoSerial.print((int)next_position);
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[next_flag][TYPE]);
+    NeoSerial.print("#TAICHI: is_claw_catch: "); NeoSerial.print((int)is_claw_catch); NeoSerial.print(" is_claw_ok: "); NeoSerial.println((int)is_claw_ok);
     #endif
 
     int8_t& passed_flag_type = route[passed_flag][TYPE];
@@ -489,15 +530,13 @@ void loop()
         #ifdef TAICHI_DEBUG
         DebugCanNotContinue("CHOOSE LOOP");
         #endif
-
-        while (1) {}
     }
 
     //更新标记，继续循环
     UpdateFlag();
 
     #ifdef TAICHI_DEBUG
-    Serial.println("#TAICHI: ====================End loop()====================");
+    NeoSerial.println("#TAICHI: ====================End loop()====================");
     #endif
 }
 
@@ -505,9 +544,9 @@ void loop()
 //设置接口低电平作为额外地
 void SetGNDPins(void)
 {
-    int pin_num = sizeof(gnd_pins) / sizeof(uint8_t);
+    uint8_t pin_num = sizeof(gnd_pins) / sizeof(uint8_t);
 
-    for (int i = 0; i < pin_num; i++)
+    for (uint8_t i = 0; i < pin_num; i++)
     {
         pinMode(gnd_pins[i], OUTPUT);
         digitalWrite(gnd_pins[i], LOW);
@@ -515,10 +554,49 @@ void SetGNDPins(void)
 }
 
 
+//从 EEPROM 读取数据
+void ReadFromEEPROM(void)
+{
+    //从 EEPROM 读取调试数据
+    EEPROM.get(EEPROM_ADDRESS, stroage_info);
+
+    //转向角度
+    north_left_angle = stroage_info.real_angle_val[0];
+    north_right_angle = stroage_info.real_angle_val[1];
+    west_left_angle = stroage_info.real_angle_val[2];
+    west_right_angle = stroage_info.real_angle_val[3];
+    south_left_angle = stroage_info.real_angle_val[4];
+    south_right_angle = stroage_info.real_angle_val[5];
+    east_left_angle = stroage_info.real_angle_val[6];
+    east_right_angle = stroage_info.real_angle_val[7];
+
+    //转向灰度值
+    sensor.SetGrayGate(GRAY_7, stroage_info.gray_7_gate);
+
+    //转向时间
+    delay_time_after_turn = stroage_info.delay_time_after_turn;
+
+    #ifdef TAICHI_DEBUG
+    NeoSerial.println("#TAICHI: Data based on EEPROM : ");
+    NeoSerial.print("north_left_angle: "); NeoSerial.println(north_left_angle);
+    NeoSerial.print("north_right_angle: "); NeoSerial.println(north_right_angle);
+    NeoSerial.print("west_left_angle: "); NeoSerial.println(west_left_angle);
+    NeoSerial.print("west_right_angle: "); NeoSerial.println(west_right_angle);
+    NeoSerial.print("south_left_angle: "); NeoSerial.println(south_left_angle);
+    NeoSerial.print("south_right_angle: "); NeoSerial.println(south_right_angle);
+    NeoSerial.print("east_left_angle: "); NeoSerial.println(east_left_angle);
+    NeoSerial.print("east_right_angle: "); NeoSerial.println(east_right_angle);
+    NeoSerial.print("gray_7_gate: "); NeoSerial.println(stroage_info.gray_7_gate);
+    NeoSerial.print("delay_time_after_turn: "); NeoSerial.println(delay_time_after_turn);
+    #endif
+}
+
+
 //在开始运行前依次检测各灰度传感器下方黑白是否正常，若不正常，异常传感器闪烁，程序不继续进行
 void CheckGrayStatus(void)
 {
-    //若正常，1 2 5 6 号传感器检测到黑色，3 4 7 号传感器检测到白色
+    //若正常，1 2 5 6 号传感器检测到黑色，3 4 号传感器检测到白色
+    //若一开始就采用灰度转弯，7 号也应检测到白色
     bool is_status_right = false;
 
     while (!is_status_right)
@@ -535,13 +613,13 @@ void CheckGrayStatus(void)
             sensor.FlashGraySensor(GRAY_5);
         else if (sensor.IsWhite(GRAY_6))
             sensor.FlashGraySensor(GRAY_6);
-        else if (!sensor.IsWhite(GRAY_7))
+        else if (turn_method == TURN_BY_GRAY && !sensor.IsWhite(GRAY_7))
             sensor.FlashGraySensor(GRAY_7);
         else is_status_right = true;
     }
 
     #ifdef TAICHI_DEBUG
-    Serial.println("#TAICHI: Gray Sensor Status OK!");
+    NeoSerial.println("#TAICHI: Gray Sensor Status OK!");
     #endif
 }
 
@@ -670,9 +748,9 @@ void LineForward(uint8_t end_position, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
     //调试输出沿线直行状态
-    Serial.print("#TAICHI: Line Forward");
-    Serial.print(" end_position: ");
-    Serial.println((int)end_position);
+    NeoSerial.print("#TAICHI: Line Forward");
+    NeoSerial.print(" end_position: ");
+    NeoSerial.println((int)end_position);
     #endif
 
     //记录开始时间
@@ -734,7 +812,7 @@ void LineForward(uint8_t end_position, float speed_rate)
 
     #ifdef TAICHI_DEBUG
     //调试输出沿线直行结束
-    Serial.println("#TAICHI: End Line Forward");
+    NeoSerial.println("#TAICHI: End Line Forward");
     #endif
 }
 
@@ -744,9 +822,9 @@ void LineBackward(uint8_t end_position, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
     //调试输出沿线后退状态
-    Serial.print("#TAICHI: Line Backward");
-    Serial.print(" end_position: ");
-    Serial.println((int)end_position);
+    NeoSerial.print("#TAICHI: Line Backward");
+    NeoSerial.print(" end_position: ");
+    NeoSerial.println((int)end_position);
     #endif
 
     //记录灰度传感器匹配情况
@@ -796,7 +874,7 @@ void LineBackward(uint8_t end_position, float speed_rate)
 
     #ifdef TAICHI_DEBUG
     //调试输出沿线后退结束
-    Serial.println("#TAICHI: End Line Backward");
+    NeoSerial.println("#TAICHI: End Line Backward");
     #endif
 }
 
@@ -814,7 +892,7 @@ void TurnDirection(float speed_rate)
 
         #ifdef TAICHI_DEBUG
         //调试输出直行或后退或转向状态
-        Serial.println("#TAICHI: JUMP THE RELEASE/GETOUT/GAIN POINT FOR STATUS REASON");
+        NeoSerial.println("#TAICHI: JUMP THE RELEASE/GETOUT/GAIN POINT FOR STATUS REASON");
         #endif
     }
     
@@ -822,9 +900,9 @@ void TurnDirection(float speed_rate)
     
     #ifdef TAICHI_DEBUG
     //调试输出直行或后退或转向状态
-    Serial.print("#TAICHI: Turn Direction");
-    Serial.print(" direction: ");
-    Serial.println((int)direction);
+    NeoSerial.print("#TAICHI: Turn Direction");
+    NeoSerial.print(" direction: ");
+    NeoSerial.println((int)direction);
     #endif
     
     if (direction == FORWARD) //继续直行
@@ -847,14 +925,62 @@ void TurnDirection(float speed_rate)
         //旋转
         move.MoveDirection(direction, speed_rate);
 
-        //等待一定时间后检测是否摆正
-        delay(BEFORE_CHECK_STRAIGHT_DELAY);
-        while (!sensor.IsWhite(GRAY_7)) {}
+        //角度相关计算
+        float next_real_angle;
+        uint8_t next_real_direction;
+        if (direction == FORLEFTWARD || direction == BACKRIGHTWARD)
+        {
+            switch (current_real_direction)
+            {
+            case NORTH: next_real_direction = WEST; next_real_angle = west_left_angle; break;
+            case WEST: next_real_direction = SOUTH; next_real_angle = south_left_angle; break;
+            case SOUTH: next_real_direction = EAST; next_real_angle = east_left_angle; break;
+            case EAST: next_real_direction = NORTH; next_real_angle = north_left_angle;
+            }
+        }
+        else
+        {
+            switch (current_real_direction)
+            {
+            case NORTH: next_real_direction = EAST; next_real_angle = east_right_angle; break;
+            case WEST: next_real_direction = NORTH; next_real_angle = north_right_angle; break;
+            case SOUTH: next_real_direction = WEST; next_real_angle = west_right_angle; break;
+            case EAST: next_real_direction = SOUTH; next_real_angle = south_right_angle;
+            }
+        }
+
+        //以不同方式判定结束
+        switch (turn_method)
+        {
+        case TURN_BY_TIME: //基于时间
+        {
+            delay(delay_time_after_turn);
+        } break;
+
+        case TURN_BY_GRAY: //基于灰度传感器
+        {
+            //等待一定时间后检测是否摆正
+            delay(BEFORE_CHECK_STRAIGHT_DELAY);
+            while (!sensor.IsWhite(GRAY_7)) {}
+        } break;
+
+        case TURN_BY_EARTH: //基于地磁场
+        {
+            //等待一定时间后检测是否摆正
+            delay(BEFORE_CHECK_STRAIGHT_DELAY);
+            
+            if (direction == FORLEFTWARD || direction == BACKRIGHTWARD)
+                while (sensor.GetAngle() < next_real_angle) {}
+            else while (sensor.GetAngle() > next_real_angle) {}
+        }
+        }
+
+        current_real_direction = next_real_direction;
     }
 
     #ifdef TAICHI_DEBUG
     //调试输出直行或后退或转向结束
-    Serial.println("#TAICHI: End Turn Direction");
+    NeoSerial.println("#TAICHI: End Turn Direction");
     #endif
 }
 
@@ -889,8 +1015,8 @@ bool CatchAndCheck(uint8_t type, float speed)
         {
             #ifdef TAICHI_DEBUG
             //调试输出失败信息
-            Serial.print("#TAICHI: **********FAIL CATCH!**********");
-            Serial.print(" catch_times: "); Serial.println((int)catch_times);
+            NeoSerial.print("#TAICHI: **********FAIL CATCH!**********");
+            NeoSerial.print(" catch_times: "); NeoSerial.println((int)catch_times);
             #endif
 
             if (type == CATCH_TYPE_GAIN)
@@ -924,14 +1050,14 @@ bool CatchAndCheck(uint8_t type, float speed)
     #ifndef DISABLE_CLAW_CHECK
     #ifdef TAICHI_DEBUG
     //调试输出成功信息
-    Serial.println("#TAICHI: SUCCUESS CATCH!");
+    NeoSerial.println("#TAICHI: SUCCESS CATCH!");
     #endif
     #endif
 
     #ifdef DISABLE_CLAW_CHECK
     #ifdef TAICHI_DEBUG
     //调试输出结束信息
-    Serial.println("#TAICHI: CATCH WITHOUT CHECK!");
+    NeoSerial.println("#TAICHI: CATCH WITHOUT CHECK!");
     #endif
     #endif
 
@@ -946,7 +1072,7 @@ bool OpenClawAndCheck(void)
     #ifdef DISABLE_CLAW_CHECK
     #ifdef TAICHI_DEBUG
     //调试输出信息
-    Serial.println("#TAICHI: DISABLE CLAW CHECK!");
+    NeoSerial.println("#TAICHI: DISABLE CLAW CHECK!");
     #endif
 
     is_claw_ok = true;
@@ -966,7 +1092,7 @@ bool OpenClawAndCheck(void)
         {
             #ifdef TAICHI_DEBUG
             //调试输出成功信息
-            Serial.println("#TAICHI: SUCCUESS OPEN CLAW!");
+            NeoSerial.println("#TAICHI: SUCCESS OPEN CLAW!");
             #endif
             
             is_claw_ok = true;
@@ -976,9 +1102,16 @@ bool OpenClawAndCheck(void)
 
     #ifdef TAICHI_DEBUG
     //调试输出失败信息
-    Serial.println("#TAICHI: $$$$$$$$$$FAIL CLAW!$$$$$$$$$$");
+    NeoSerial.println("#TAICHI: $$$$$$$$$$FAIL CLAW!$$$$$$$$$$");
     #endif
     
     is_claw_ok = false;
     return false;
+}
+
+
+//通讯消息处理函数
+void HandleMessage(char* message)
+{
+    //
 }
