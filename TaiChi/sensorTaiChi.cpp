@@ -1,12 +1,11 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include "sensorTaiChi.h"
+
 #ifdef SENSOR_DEBUG
 #include <NeoHWSerial.h>
 #endif
-
-#include "sensorTaiChi.h"
-
 
 Sensor::Sensor()
 {

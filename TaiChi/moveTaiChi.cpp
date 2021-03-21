@@ -1,11 +1,10 @@
 #include <Arduino.h>
 
-#ifdef SENSOR_DEBUG
-#include <NeoHWSerial.h>
-#endif
-
 #include "moveTaiChi.h"
 
+#ifdef MOVE_DEBUG
+#include <NeoHWSerial.h>
+#endif
 
 Move::Move()
 {
