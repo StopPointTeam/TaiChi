@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#ifdef SENSOR_DEBUG
+#include <NeoHWSerial.h>
+#endif
+
 #include "sensorTaiChi.h"
 
 
@@ -81,13 +85,13 @@ void Sensor::FlashGraySensor(uint8_t gray_sensor_num)
     //调试输出闪烁信息
     switch (gray_sensor_num)
     {
-    case GRAY_1: Serial.println("#SENSOR: FLASH GRAY_1 NOW!"); break;
-    case GRAY_2: Serial.println("#SENSOR: FLASH GRAY_2 NOW!"); break;
-    case GRAY_3: Serial.println("#SENSOR: FLASH GRAY_3 NOW!"); break;
-    case GRAY_4: Serial.println("#SENSOR: FLASH GRAY_4 NOW!"); break;
-    case GRAY_5: Serial.println("#SENSOR: FLASH GRAY_5 NOW!"); break;
-    case GRAY_6: Serial.println("#SENSOR: FLASH GRAY_6 NOW!"); break;
-    case GRAY_7: Serial.println("#SENSOR: FLASH GRAY_7 NOW!");
+    case GRAY_1: NeoSerial.println("#SENSOR: FLASH GRAY_1 NOW!"); break;
+    case GRAY_2: NeoSerial.println("#SENSOR: FLASH GRAY_2 NOW!"); break;
+    case GRAY_3: NeoSerial.println("#SENSOR: FLASH GRAY_3 NOW!"); break;
+    case GRAY_4: NeoSerial.println("#SENSOR: FLASH GRAY_4 NOW!"); break;
+    case GRAY_5: NeoSerial.println("#SENSOR: FLASH GRAY_5 NOW!"); break;
+    case GRAY_6: NeoSerial.println("#SENSOR: FLASH GRAY_6 NOW!"); break;
+    case GRAY_7: NeoSerial.println("#SENSOR: FLASH GRAY_7 NOW!");
     }
     #endif
 
@@ -120,18 +124,18 @@ bool Sensor::IsWhite(uint8_t gray_sensor_num)
     //调试输出灰度值
     switch (gray_sensor_num)
     {
-    case GRAY_1: Serial.print("#SENSOR: GRAY_1 and gate_val: "); break;
-    case GRAY_2: Serial.print("#SENSOR: GRAY_2 and gate_val: "); break;
-    case GRAY_3: Serial.print("#SENSOR: GRAY_3 and gate_val: "); break;
-    case GRAY_4: Serial.print("#SENSOR: GRAY_4 and gate_val: "); break;
-    case GRAY_5: Serial.print("#SENSOR: GRAY_5 and gate_val: "); break;
-    case GRAY_6: Serial.print("#SENSOR: GRAY_6 and gate_val: "); break;
-    case GRAY_7: Serial.print("#SENSOR: GRAY_7 and gate_val: ");
+    case GRAY_1: NeoSerial.print("#SENSOR: GRAY_1 and gate_val: "); break;
+    case GRAY_2: NeoSerial.print("#SENSOR: GRAY_2 and gate_val: "); break;
+    case GRAY_3: NeoSerial.print("#SENSOR: GRAY_3 and gate_val: "); break;
+    case GRAY_4: NeoSerial.print("#SENSOR: GRAY_4 and gate_val: "); break;
+    case GRAY_5: NeoSerial.print("#SENSOR: GRAY_5 and gate_val: "); break;
+    case GRAY_6: NeoSerial.print("#SENSOR: GRAY_6 and gate_val: "); break;
+    case GRAY_7: NeoSerial.print("#SENSOR: GRAY_7 and gate_val: ");
     }
 
-    Serial.print(gray_val);
-    Serial.print(" ");
-    Serial.println(gray_gate);
+    NeoSerial.print(gray_val);
+    NeoSerial.print(" ");
+    NeoSerial.println(gray_gate);
     #endif
 
     if (gray_val > gray_gate)
@@ -165,25 +169,25 @@ float Sensor::GrayDeviationRate(uint8_t gray_sensor_num)
     //调试输出灰度值
     switch (gray_sensor_num)
     {
-    case GRAY_1: Serial.print("#SENSOR: GRAY_1 and gate_val: "); break;
-    case GRAY_2: Serial.print("#SENSOR: GRAY_2 and gate_val: "); break;
-    case GRAY_3: Serial.print("#SENSOR: GRAY_3 and gate_val: "); break;
-    case GRAY_4: Serial.print("#SENSOR: GRAY_4 and gate_val: "); break;
-    case GRAY_5: Serial.print("#SENSOR: GRAY_5 and gate_val: "); break;
-    case GRAY_6: Serial.print("#SENSOR: GRAY_6 and gate_val: "); break;
-    case GRAY_7: Serial.print("#SENSOR: GRAY_7 and gate_val: ");
+    case GRAY_1: NeoSerial.print("#SENSOR: GRAY_1 and gate_val: "); break;
+    case GRAY_2: NeoSerial.print("#SENSOR: GRAY_2 and gate_val: "); break;
+    case GRAY_3: NeoSerial.print("#SENSOR: GRAY_3 and gate_val: "); break;
+    case GRAY_4: NeoSerial.print("#SENSOR: GRAY_4 and gate_val: "); break;
+    case GRAY_5: NeoSerial.print("#SENSOR: GRAY_5 and gate_val: "); break;
+    case GRAY_6: NeoSerial.print("#SENSOR: GRAY_6 and gate_val: "); break;
+    case GRAY_7: NeoSerial.print("#SENSOR: GRAY_7 and gate_val: ");
     }
 
-    Serial.print(gray_val);
-    Serial.print(" ");
-    Serial.print(gray_gate);
+    NeoSerial.print(gray_val);
+    NeoSerial.print(" ");
+    NeoSerial.print(gray_gate);
     #endif
 
     deviarion_rate = (float)gray_val / gray_gate;
 
     #ifdef SENSOR_DEBUG
-    Serial.print(" deviarion_rate: ");
-    Serial.println(deviarion_rate);
+    NeoSerial.print(" deviarion_rate: ");
+    NeoSerial.println(deviarion_rate);
     #endif
 
     return deviarion_rate;
@@ -205,12 +209,12 @@ bool Sensor::IsPushed(uint8_t button_num)
     #ifdef SENSOR_DEBUG
     //调试输出按钮状态
     if (button_num == BUTTON_1)
-        Serial.print("#SENSOR: BUTTON_1: ");
-    else Serial.print("#SENSOR: BUTTON_2: ");
+        NeoSerial.print("#SENSOR: BUTTON_1: ");
+    else NeoSerial.print("#SENSOR: BUTTON_2: ");
 
     if (button_val == LOW)
-        Serial.println("pushed");
-    else Serial.println("released");
+        NeoSerial.println("pushed");
+    else NeoSerial.println("released");
     #endif    
 
     if (button_val == LOW)
@@ -227,6 +231,11 @@ void Sensor::StartHMC5883(void)
     Wire.write(0x02);
     Wire.write(0x00);
     Wire.endTransmission();
+
+    #ifdef SENSOR_DEBUG
+    //调试输出
+    NeoSerial.println("#SENSOR: Start HMC5883");
+    #endif
 }
 
 
@@ -260,8 +269,8 @@ float Sensor::GetAngle(void)
     
     #ifdef SENSOR_DEBUG
     //调试输出朝向角
-    Serial.print("#SENSOR: Angle Value: ");
-    Serial.println(angle);  
+    NeoSerial.print("#SENSOR: Angle Value: ");
+    NeoSerial.println(angle);  
     #endif
 
     return angle;

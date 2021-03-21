@@ -1,3 +1,5 @@
+#include <NeoHWSerial.h>
+
 #include "servoTaiChi.h"
 
 
@@ -11,16 +13,14 @@
 
 Servo::Servo()
 {
-    SerialX = &DEFAULT_SERVO_SERIAL_NUM; //默认使用 Mega 板 18 19 作为串口通信端口
-    SerialX->begin(SERVO_BAUD_RATE);
+    NeoSerialX = &SERVO_SERIAL_NUM; //默认使用 Mega 板 18 19 作为串口通信端口
 }
 
 
-//指定串口通信端口
-Servo::Servo(HardwareSerial& serial_num)
+//打开串口
+void Servo::BeginTransmit(unsigned long baud_rate)
 {
-    SerialX = &serial_num;
-    SerialX->begin(SERVO_BAUD_RATE);
+    NeoSerialX->begin(SERVO_BAUD_RATE);
 }
 
 
@@ -40,13 +40,13 @@ void Servo::MoveServo(uint8_t servo_id, uint16_t position, uint16_t time)
 	buf[8] = GET_LOW_BYTE(position);         //填充目标位置的低八位
 	buf[9] = GET_HIGH_BYTE(position);        //填充目标位置的高八位
 
-	SerialX->write(buf, 10);
+	NeoSerialX->write(buf, 10);
 
     #ifdef SERVO_DEBUG
     //调试输出动作组执行信息
-    Serial.print("#SERVO:  MoveServo: "); Serial.print((int)servo_id); 
-    Serial.print(" position: "); Serial.print((int)position); 
-    Serial.print(" time: "); Serial.println((int)time);
+    NeoSerial.print("#SERVO:  MoveServo: "); NeoSerial.print((int)servo_id); 
+    NeoSerial.print(" position: "); NeoSerial.print((int)position); 
+    NeoSerial.print(" time: "); NeoSerial.println((int)time);
     #endif
 }
 
@@ -65,12 +65,12 @@ void Servo::RunActionGroup(uint8_t action_num, uint16_t times)
     buf[5] = GET_LOW_BYTE(times);  //取得要运行次数的低八位
     buf[6] = GET_HIGH_BYTE(times); //取得要运行次数的高八位
 
-    SerialX->write(buf, 7);        //发送数据帧
+    NeoSerialX->write(buf, 7);        //发送数据帧
 
     #ifdef SERVO_DEBUG
     //调试输出动作组执行信息
-    Serial.print("#SERVO:  RunServoActionGroup: ");
-    Serial.println((int)action_num);
+    NeoSerial.print("#SERVO:  RunServoActionGroup: ");
+    NeoSerial.println((int)action_num);
     #endif
 }
 
@@ -84,11 +84,11 @@ void Servo::StopActionGroup(void)
     buf[2] = 2;                     //数据长度，数据帧除帧头部分数据字节数，此命令固定为2
     buf[3] = CMD_ACTION_GROUP_STOP; //填充停止运行动作组命令
 
-    SerialX->write(buf, 4); //发送数据帧
+    NeoSerialX->write(buf, 4); //发送数据帧
 
     #ifdef SERVO_DEBUG
     //调试输出动作组停止信息
-    Serial.println("#SERVO:  StopServoActionGroup");
+    NeoSerial.println("#SERVO:  StopServoActionGroup");
     #endif
 }
 
@@ -107,14 +107,14 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
     buf[5] = GET_LOW_BYTE(speed_int);    //获得目标速度的低八位
     buf[6] = GET_HIGH_BYTE(speed_int);   //获得目标熟读的高八位
 
-    SerialX->write(buf, 7); //发送数据帧
+    NeoSerialX->write(buf, 7); //发送数据帧
 
     #ifdef SERVO_DEBUG
     //调试输出动作组速度设定信息
-    Serial.print("#SERVO:  SetServoActionGroupSpeed: ");
-    Serial.print((int)action_num);
-    Serial.print(" Speed: ");
-    Serial.println(speed);
+    NeoSerial.print("#SERVO:  SetServoActionGroupSpeed: ");
+    NeoSerial.print((int)action_num);
+    NeoSerial.print(" Speed: ");
+    NeoSerial.println(speed);
     #endif
 }
 
@@ -142,7 +142,7 @@ void Servo::Reset(float speed)
 }
 
 
- //放下爪子，指定速度
+//放下爪子，指定速度
 void Servo::Down(float speed)
 {
     SetActionGroupSpeed(ACTION_DOWN_NUM, speed);

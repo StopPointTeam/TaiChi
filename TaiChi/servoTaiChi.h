@@ -9,9 +9,9 @@
 #define SERVO_DEBUG
 
 
-//默认与舵机控制板连接串口
-//默认使用 Mega 板 18 19 作为串口通信端口
-#define DEFAULT_SERVO_SERIAL_NUM Serial1
+//与舵机控制板连接串口
+//使用 Mega 板 18 19 作为串口通信端口
+#define SERVO_SERIAL_NUM NeoSerial1
 
 
 //与舵机控制板串口通信波特率
@@ -52,7 +52,8 @@ class Servo
 {
 public:
     Servo();
-    Servo(HardwareSerial &serial_num); //构造函数，指定串口通信端口
+
+    void BeginTransmit(unsigned long baud_rate = SERVO_BAUD_RATE); //打开串口
 
     void MoveServo(uint8_t servo_id, uint16_t position, uint16_t time); //控制单个舵机转动
 
@@ -73,7 +74,7 @@ public:
     void StopAndReset(float speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
 
 private:
-    HardwareSerial *SerialX;
+    NeoHWSerial* NeoSerialX;
 };
 
 
