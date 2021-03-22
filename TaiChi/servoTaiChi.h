@@ -53,28 +53,28 @@ class Servo
 public:
     Servo();
 
-    void BeginTransmit(unsigned long baud_rate = SERVO_BAUD_RATE); //打开串口
+    static void BeginTransmit(unsigned long baud_rate = SERVO_BAUD_RATE); //打开串口
 
-    void MoveServo(uint8_t servo_id, uint16_t position, uint16_t time); //控制单个舵机转动
+    static void MoveServo(uint8_t servo_id, uint16_t position, uint16_t time); //控制单个舵机转动
 
-    void RunActionGroup(uint8_t action_num, uint16_t times); //运行指定动作组
-    void StopActionGroup(void); //停止动作组运行
-    void SetActionGroupSpeed(uint8_t action_num, float speed); //设定指定动作组的运行速度
-    void SetAllActionGroupSpeed(float speed); //设置所有动作组的运行速度
+    static void RunActionGroup(uint8_t action_num, uint16_t times); //运行指定动作组
+    static void StopActionGroup(void); //停止动作组运行
+    static void SetActionGroupSpeed(uint8_t action_num, float speed); //设定指定动作组的运行速度
+    static void SetAllActionGroupSpeed(float speed); //设置所有动作组的运行速度
 
-    void OpenClaw(void); //打开爪子
+    static void OpenClaw(void); //打开爪子
 
-    void Reset(float speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
-    void Down(float speed = SERVO_NORMAL_SPEED); //放下爪子，指定速度
-    void Catch(float speed = SERVO_NORMAL_SPEED); //抓取，指定速度
-    void Release(float speed = SERVO_NORMAL_SPEED); //释放，指定速度
-    void GainDown(float speed = SERVO_NORMAL_SPEED); //增益点放下爪子，指定速度
-    void GainCatch(float speed = SERVO_NORMAL_SPEED); //增益点抓取，指定速度
-    void GainUp(float speed = SERVO_NORMAL_SPEED); //增益点抬升，指定速度
-    void StopAndReset(float speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
+    static void Reset(float speed = SERVO_NORMAL_SPEED); //恢复初始状态，指定速度
+    static void Down(float speed = SERVO_NORMAL_SPEED); //放下爪子，指定速度
+    static void Catch(float speed = SERVO_NORMAL_SPEED); //抓取，指定速度
+    static void Release(float speed = SERVO_NORMAL_SPEED); //释放，指定速度
+    static void GainDown(float speed = SERVO_NORMAL_SPEED); //增益点放下爪子，指定速度
+    static void GainCatch(float speed = SERVO_NORMAL_SPEED); //增益点抓取，指定速度
+    static void GainUp(float speed = SERVO_NORMAL_SPEED); //增益点抬升，指定速度
+    static void StopAndReset(float speed = SERVO_NORMAL_SPEED); //停止舵机并恢复初始状态，指定速度
 
 private:
-    NeoHWSerial* NeoSerialX;
+    static NeoHWSerial* NeoSerialX;
 };
 
 

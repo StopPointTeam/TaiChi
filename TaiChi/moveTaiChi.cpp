@@ -6,26 +6,27 @@
 #include <NeoHWSerial.h>
 #endif
 
-Move::Move()
-{
-    global_speed_rate = DEFAULT_GLOBAL_SPEED_RATE;
-    current_direction = STOP;
-    current_speed_rate = 0.0;
-}
+
+//静态变量
+float Move::global_speed_rate = DEFAULT_GLOBAL_SPEED_RATE; //全局速度比率
+uint8_t Move::current_direction = STOP; //当前运动状态
+float Move::current_speed_rate = 0.0; //当前运动速度比率
+float Move::current_turn_speed_rate; //当前转向时一侧减速的比率
+
+
+Move::Move() {}
 
 
 Move::Move(float global_speed_rate)
 {
-    Move();
-    
-    this->global_speed_rate = global_speed_rate;
+    Move::global_speed_rate = global_speed_rate;
 }
 
 
 //设置全局速度比率
 void Move::SetGlobalSpeedRate(float global_speed_rate)
 {
-    this->global_speed_rate = global_speed_rate;
+    Move::global_speed_rate = global_speed_rate;
 }
 
 

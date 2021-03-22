@@ -11,16 +11,17 @@
 #define BYTE_TO_HW(A, B) ((((uint16_t)(A)) << 8) | (uint8_t)(B))
 
 
-Servo::Servo()
-{
-    NeoSerialX = &SERVO_SERIAL_NUM; //默认使用 Mega 板 18 19 作为串口通信端口
-}
+//静态变量
+NeoHWSerial* Servo::NeoSerialX = &SERVO_SERIAL_NUM;
+
+
+Servo::Servo() {}
 
 
 //打开串口
 void Servo::BeginTransmit(unsigned long baud_rate)
 {
-    NeoSerialX->begin(SERVO_BAUD_RATE);
+    NeoSerialX->begin(baud_rate);
 }
 
 

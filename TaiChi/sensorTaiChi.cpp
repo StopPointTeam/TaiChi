@@ -7,6 +7,17 @@
 #include <NeoHWSerial.h>
 #endif
 
+
+//静态变量
+int Sensor::gray_1_gate = DEFAULT_GRAY_1_GATE;
+int Sensor::gray_2_gate = DEFAULT_GRAY_2_GATE;
+int Sensor::gray_3_gate = DEFAULT_GRAY_3_GATE;
+int Sensor::gray_4_gate = DEFAULT_GRAY_4_GATE;
+int Sensor::gray_5_gate = DEFAULT_GRAY_5_GATE;
+int Sensor::gray_6_gate = DEFAULT_GRAY_6_GATE;
+int Sensor::gray_7_gate = DEFAULT_GRAY_7_GATE;
+
+
 Sensor::Sensor()
 {
     pinMode(BUTTON_1_OUT, INPUT_PULLUP);
@@ -38,15 +49,6 @@ Sensor::Sensor()
 
     pinMode(BUTTON_2_VCC, OUTPUT);
     digitalWrite(BUTTON_2_VCC, HIGH);
-
-    //设置灰度值为默认值
-    SetGrayGate(GRAY_1, DEFAULT_GRAY_1_GATE);
-    SetGrayGate(GRAY_2, DEFAULT_GRAY_2_GATE);
-    SetGrayGate(GRAY_3, DEFAULT_GRAY_3_GATE);
-    SetGrayGate(GRAY_4, DEFAULT_GRAY_4_GATE);
-    SetGrayGate(GRAY_5, DEFAULT_GRAY_5_GATE);
-    SetGrayGate(GRAY_6, DEFAULT_GRAY_6_GATE);
-    SetGrayGate(GRAY_7, DEFAULT_GRAY_7_GATE);
 }
 
 

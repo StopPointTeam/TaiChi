@@ -5,13 +5,11 @@
 
 //静态变量
 HandleMessageFunction Radio::hm_func;
-NeoHWSerial* Radio::NeoSerialX;
+NeoHWSerial* Radio::NeoSerialX = &RADIO_SERIAL_NUM;
 
 
 Radio::Radio()
 {
-    NeoSerialX = &RADIO_SERIAL_NUM;
-    
     EnableReceiveInterrupt();
 }
 
@@ -19,7 +17,7 @@ Radio::Radio()
 //打开串口
 void Radio::BeginTransmit(unsigned long baud_rate)
 {
-    NeoSerialX->begin(RADIO_BAUD_RATE);
+    NeoSerialX->begin(baud_rate);
 }
 
 

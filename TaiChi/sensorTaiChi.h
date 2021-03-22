@@ -67,35 +67,35 @@ public:
     Sensor();
 
     //设置灰度传感器临界值
-    void SetGrayGate(uint8_t gray_sensor_num, int gate);
+    static void SetGrayGate(uint8_t gray_sensor_num, int gate);
 
     //使灰度传感器闪烁
-    void FlashGraySensor(uint8_t gray_sensor_num);
+    static void FlashGraySensor(uint8_t gray_sensor_num);
 
     //灰度传感器判断下方是否为白色
-    bool IsWhite(uint8_t gray_sensor_num);
+    static bool IsWhite(uint8_t gray_sensor_num);
 
     //灰度传感器灰度值偏离比例，即 (gray_gate - gray_val) / gray_gate
-    float GrayDeviationRate(uint8_t gray_sensor_num);
+    static float GrayDeviationRate(uint8_t gray_sensor_num);
 
     //碰撞传感器（开关）判断是否闭合
-    bool IsPushed(uint8_t button_num);
+    static bool IsPushed(uint8_t button_num);
 
     //开启 HMC5883 的 I2C 通讯
-    void StartHMC5883(void);
+    static void StartHMC5883(void);
 
     //返回朝向角
-    float GetAngle(void);
+    static float GetAngle(void);
 
 private:
     //灰度传感器临界值
-    int gray_1_gate;
-    int gray_2_gate;
-    int gray_3_gate;
-    int gray_4_gate;
-    int gray_5_gate;
-    int gray_6_gate;
-    int gray_7_gate;
+    static int gray_1_gate;
+    static int gray_2_gate;
+    static int gray_3_gate;
+    static int gray_4_gate;
+    static int gray_5_gate;
+    static int gray_6_gate;
+    static int gray_7_gate;
 };  
 
 
