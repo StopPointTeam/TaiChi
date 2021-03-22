@@ -2,7 +2,6 @@
 #define RADIOTAICHI_H
 
 
-#include <Arduino.h>
 #include <NeoHWSerial.h>
 
 //注释以关闭调试功能
@@ -52,6 +51,7 @@ public:
     static void SetHandleMessageFunction(HandleMessageFunction hm_func); //设置接收回调函数
     static void DisableReceiveInterrupt(); //禁用接收中断
     static void EnableReceiveInterrupt(); //恢复接收中断
+
 private:
     static bool Receive(uint8_t ch, uint8_t status); //接收，使用中断触发
 
