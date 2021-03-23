@@ -2,60 +2,18 @@
 #include <EEPROM.h>
 #include <NeoHWSerial.h>
 
+#include "routeTaiChi.h" //路径库
 #include "moveTaiChi.h" //轮胎运动库
 #include "sensorTaiChi.h" //传感器库
 #include "servoTaiChi.h" //舵机库
 #include "radioTaiChi.h" //通信库
 
 
+Route route; //路径实例
 Move move; //轮胎运动实例
 Sensor sensor; //传感器实例
 Servo servo; //舵机实例
 Radio radio; //通讯实例
-
-
-//****************************************运动路径****************************************
-//坐标点操作定义
-#define NORMAL_POINT 0 //普通点
-#define CATCH_POINT 1 //抓取点
-#define RELEASE_POINT 2 //释放点（使用机械臂）
-#define CARRY_POINT 3 //携带点（从底盘）
-#define GETOUT_POINT 4 //释放点（从底盘）
-#define GAIN_POINT 5 //增益点
-
-//坐标点数组定义
-#define X 0
-#define Y 1
-#define TYPE 2
-
-int8_t route[][3] = 
-{
-    {0, 0, NORMAL_POINT},
-    {0, 1, NORMAL_POINT},
-    {0, 2, NORMAL_POINT},
-    {-1, 2, NORMAL_POINT},
-    {-1, 1, CATCH_POINT},
-    {0, 1, NORMAL_POINT},
-    {0, 0, NORMAL_POINT},
-    {-1, 0, RELEASE_POINT},
-    {0, 0, NORMAL_POINT},
-    {0, 1, NORMAL_POINT},
-    {0, 2, NORMAL_POINT},
-    {-1, 2, NORMAL_POINT},
-    {-1, 1, NORMAL_POINT},
-    {0, 1, NORMAL_POINT},
-    {0, 0, NORMAL_POINT},
-    {-1, 0, GAIN_POINT},
-    {0, 0, NORMAL_POINT},
-    {0, 1, NORMAL_POINT},
-    {0, 2, NORMAL_POINT},
-    {-1, 2, NORMAL_POINT},
-    {-1, 1, NORMAL_POINT},
-    {0, 1, NORMAL_POINT},
-    {0, 0, NORMAL_POINT},
-    {-1, 0, RELEASE_POINT}
-};
-//***************************************************************************************
 
 
 //****************************************可调参数****************************************
@@ -138,13 +96,10 @@ int gray_7_gate;
 //转向开始到结束的时间
 int delay_time_after_turn;
 
-//数组位置标记
-int passed_flag = 0;
-int next_flag = 1;
-int next_next_flag = 2;
-
-//最大数组位置标记
-int max_flag;
+//从 route 实例获取的点
+Point passed_point;
+Point next_point;
+Point next_next_point;
 
 #define FRONT_NEXT 0
 #define BACK_NEXT 1
@@ -185,10 +140,8 @@ void ReadFromEEPROM(void);
 //在开始运行前依次检测各灰度传感器下方黑白是否正常，若不正常，异常传感器闪烁，程序不继续进行
 void CheckGrayStatus(void);
 
-#define NO_JUMP 0
-#define JUMP_DEAD_ROAD 1
-//更新标记
-void UpdateFlag(uint8_t jump_choice = NO_JUMP);
+//从 route 实例获取点
+void GetPointFromRoute(void);
 
 //计算方向，同时更改完成转向后相对下一点的朝向
 uint8_t CalcDirection(void);
@@ -228,6 +181,8 @@ void HandleMessage(char * message);
 
 #ifdef TAICHI_DEBUG
 
+#include "MemoryUsage.h"
+
 #define DEBUG_BAUT_RATE 115200
 
 int loop_time = 0;
@@ -237,13 +192,13 @@ void DebugCanNotContinue(char* message)
 {
     NeoSerial.print("#TAICHI: CAN NOT CONTINUE WHEN "); NeoSerial.println(message);
     NeoSerial.print("#TAICHI: loop_time: "); NeoSerial.println(loop_time);
-    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(route[passed_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[passed_flag][Y]); NeoSerial.print("]");
-    NeoSerial.print(" flag: "); NeoSerial.print(passed_flag);
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[passed_flag][TYPE]);
-    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(route[next_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[next_flag][Y]); NeoSerial.print("]");
+    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(passed_point.x); NeoSerial.print(", "); NeoSerial.print(passed_point.y); NeoSerial.print("]");
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)passed_point.type);
+    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(next_point.x); NeoSerial.print(", "); NeoSerial.print(next_point.y); NeoSerial.print("]");
     NeoSerial.print(" next_position: "); NeoSerial.print((int)next_position);
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[next_flag][TYPE]);
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)next_point.type);
     NeoSerial.print("#TAICHI: is_claw_catch: "); NeoSerial.print((int)is_claw_catch); NeoSerial.print(" is_claw_ok: "); NeoSerial.println((int)is_claw_ok);
+    SRamDisplay();
 
     while (1) {}
 }
@@ -256,6 +211,7 @@ void setup()
     #ifdef TAICHI_DEBUG
     NeoSerial.begin(DEBUG_BAUT_RATE);
     NeoSerial.println("#TAICHI: ======================setup()=====================");
+    SRamDisplay();
     #endif
 
     SetGNDPins();
@@ -277,9 +233,6 @@ void setup()
     //在开始运行前依次检测各灰度传感器下方黑白是否正常
     CheckGrayStatus();
 
-    //计算最大数组下标
-    max_flag = sizeof(route) / sizeof(route[0]) - 1;
-
     //前往 0, 0
     //沿线直行，到后端传感器接触下一条线离开函数
     LineForward(BACK_END);
@@ -290,25 +243,24 @@ void setup()
 
 void loop()
 {
+    //从 route 实例获取点
+    GetPointFromRoute();
+    
     #ifdef TAICHI_DEBUG
     loop_time++;
     NeoSerial.println("#TAICHI: ====================New loop()====================");
     NeoSerial.print("#TAICHI: loop_time: "); NeoSerial.println(loop_time);
-    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(route[passed_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[passed_flag][Y]); NeoSerial.print("]");
-    NeoSerial.print(" flag: "); NeoSerial.print(passed_flag);
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[passed_flag][TYPE]);
-    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(route[next_flag][X]); NeoSerial.print(", "); NeoSerial.print(route[next_flag][Y]); NeoSerial.print("]");
+    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(passed_point.x); NeoSerial.print(", "); NeoSerial.print(passed_point.y); NeoSerial.print("]");
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)passed_point.type);
+    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(next_point.x); NeoSerial.print(", "); NeoSerial.print(next_point.y); NeoSerial.print("]");
     NeoSerial.print(" next_position: "); NeoSerial.print((int)next_position);
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)route[next_flag][TYPE]);
+    NeoSerial.print(" TYPE: "); NeoSerial.println((int)next_point.type);
     NeoSerial.print("#TAICHI: is_claw_catch: "); NeoSerial.print((int)is_claw_catch); NeoSerial.print(" is_claw_ok: "); NeoSerial.println((int)is_claw_ok);
+    SRamDisplay();
     #endif
 
-    int8_t& passed_flag_type = route[passed_flag][TYPE];
-    int8_t& next_flag_type = route[next_flag][TYPE];
-    int8_t& next_next_flag_type = route[next_next_flag][TYPE];
-
     //情况一：刚完整经过普通点，下一个点为普通点或携带点
-    if (passed_flag_type == NORMAL_POINT && (next_flag_type == NORMAL_POINT || next_flag_type == CARRY_POINT))   
+    if (passed_point.type == NORMAL_POINT && (next_point.type == NORMAL_POINT || next_point.type == CARRY_POINT))   
     {
         if (next_position == FRONT_NEXT)
         {
@@ -316,13 +268,13 @@ void loop()
             LineForward(FRONT_END);
 
             //若下一点为携带点
-            if (next_flag_type == CARRY_POINT)
+            if (next_point.type == CARRY_POINT)
             {
                 //底盘携带
                 is_carry = true;
 
                 //越过点成为普通点
-                next_flag_type = NORMAL_POINT;
+                route.SetNextPointType(NORMAL_POINT);
             }
         }
         else
@@ -335,7 +287,7 @@ void loop()
         TurnDirection();
     }
     //情况二：刚完整经过普通点，下一个点为抓取点
-    else if (passed_flag_type == NORMAL_POINT && next_flag_type == CATCH_POINT)
+    else if (passed_point.type == NORMAL_POINT && next_point.type == CATCH_POINT)
     {
         if (!is_claw_catch && !is_claw_ok) //爪子上无环且状态不正常
         {  
@@ -372,10 +324,10 @@ void loop()
         TurnDirection();
 
         //将越过的点视为普通点。因为即使抓取失败，环也会被携带在底盘内
-        next_flag_type = NORMAL_POINT;
+        route.SetNextPointType(NORMAL_POINT);
     }
     //情况三：刚完整经过普通点，下一个点为释放点（使用机械臂）
-    else if (passed_flag_type == NORMAL_POINT && next_flag_type == RELEASE_POINT)
+    else if (passed_point.type == NORMAL_POINT && next_point.type == RELEASE_POINT)
     {
         //沿线直行，在释放柱离开函数
         LineForward(RELEASE_END);
@@ -411,7 +363,7 @@ void loop()
         delay(STOP_DELAY_TIME);
     }
     //情况四：刚完整经过释放点（使用机械臂）或增益抓取点，下一个点为普通点
-    else if ((passed_flag_type == RELEASE_POINT || passed_flag_type == GAIN_POINT) && next_flag_type == NORMAL_POINT)
+    else if ((passed_point.type == RELEASE_POINT || passed_point.type == GAIN_POINT) && next_point.type == NORMAL_POINT)
     {
         //底盘携带清空
         is_carry = false;
@@ -423,7 +375,7 @@ void loop()
         TurnDirection();
     }
     //情况五：刚完整经过普通点，下一个点为释放点（从底盘）
-    else if (passed_flag_type == NORMAL_POINT && next_flag_type == GETOUT_POINT)
+    else if (passed_point.type == NORMAL_POINT && next_point.type == GETOUT_POINT)
     {
         //沿线直行，到前端传感器接触下一条线离开函数
         LineForward(FRONT_END);
@@ -438,7 +390,7 @@ void loop()
         next_position = BACK_NEXT;
     }
     //情况六：刚完整经过释放点（从底盘），下一个点为普通点
-    else if (passed_flag_type == GETOUT_POINT && next_flag_type == NORMAL_POINT)
+    else if (passed_point.type == GETOUT_POINT && next_point.type == NORMAL_POINT)
     {
         //沿线后退，到前端传感器接触线离开函数
         LineBackward(FRONT_END);
@@ -453,7 +405,7 @@ void loop()
         TurnDirection();
     }
     //情况七：刚完整经过普通点，下一个点为增益抓取点
-    else if (passed_flag_type == NORMAL_POINT && next_flag_type == GAIN_POINT)
+    else if (passed_point.type == NORMAL_POINT && next_point.type == GAIN_POINT)
     {
         if (!is_claw_ok) //爪子状态不正常
         {  
@@ -532,8 +484,8 @@ void loop()
         #endif
     }
 
-    //更新标记，继续循环
-    UpdateFlag();
+    //更新位置，继续循环
+    route.UpdatePosition();
 
     #ifdef TAICHI_DEBUG
     NeoSerial.println("#TAICHI: ====================End loop()====================");
@@ -624,27 +576,12 @@ void CheckGrayStatus(void)
 }
 
 
-//更新标记
-void UpdateFlag(uint8_t jump_choice)
+//从 route 实例获取点
+void GetPointFromRoute(void)
 {
-    if (jump_choice == NO_JUMP)
-    {
-        passed_flag = next_flag;
-
-        next_flag = next_next_flag;
-        
-        if (++next_next_flag > max_flag)
-            next_next_flag = 0;
-    }
-    else
-    {
-        int current_passed_flag = passed_flag;
-
-        UpdateFlag(NO_JUMP);
-        UpdateFlag(NO_JUMP);
-
-        passed_flag = current_passed_flag;
-    }
+    passed_point = route.GetPassedPoint();
+    next_point = route.GetNextPoint();
+    next_next_point = route.GetNextNextPoint();
 }
 
 
@@ -652,12 +589,12 @@ void UpdateFlag(uint8_t jump_choice)
 uint8_t CalcDirection(void)
 {
     //计算第三点与第一点的相对坐标 rx0, ry0
-    int8_t rx0 = route[next_next_flag][X] - route[passed_flag][X];
-    int8_t ry0 = route[next_next_flag][Y] - route[passed_flag][Y];
+    int8_t rx0 = next_next_point.x - passed_point.x;
+    int8_t ry0 = next_next_point.y - passed_point.y;
 
     //计算当前小车朝向的方向向量 vx, vy
-    int8_t vx = route[next_flag][X] - route[passed_flag][X];
-    int8_t vy = route[next_flag][Y] - route[passed_flag][Y];
+    int8_t vx = next_point.x - passed_point.x;
+    int8_t vy = next_point.y - passed_point.y;
 
     //坐标旋转变换
     int8_t rx, ry;
@@ -883,12 +820,13 @@ void LineBackward(uint8_t end_position, float speed_rate)
 void TurnDirection(float speed_rate)
 {    
     //若下下点为释放点或增益抓取点，判断是否需要跳过
-    if ((route[next_next_flag][TYPE] == RELEASE_POINT && (!is_claw_catch || is_carry)) 
-        || (route[next_next_flag][TYPE] == GETOUT_POINT && !is_carry)
-        || (route[next_next_flag][TYPE] == GAIN_POINT && is_claw_catch)
+    if ((next_next_point.type == RELEASE_POINT && (!is_claw_catch || is_carry)) 
+        || (next_next_point.type == GETOUT_POINT && !is_carry)
+        || (next_next_point.type == GAIN_POINT && is_claw_catch)
         )
     {
-        UpdateFlag(JUMP_DEAD_ROAD);
+        route.ChangeRoute(JUMP_DEAD_ROAD);
+        GetPointFromRoute();
 
         #ifdef TAICHI_DEBUG
         //调试输出直行或后退或转向状态
@@ -1113,5 +1051,6 @@ bool OpenClawAndCheck(void)
 //通讯消息处理函数
 void HandleMessage(char* message)
 {
-    //
+    radio.Send("Get the message: ");
+    radio.Send(message);
 }
