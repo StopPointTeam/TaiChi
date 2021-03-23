@@ -188,7 +188,7 @@ bool Radio::Receive(uint8_t ch, uint8_t status)
                 else //位数校验失败
                 {
                     #ifdef RADIO_DEBUG
-                    NeoSerial.println("#RADIO:  RECEIVE FAIL!");
+                    NeoSerial.println("#RADIO:  RECEIVE CHECK FAIL!");
                     #endif
                 }
             }
