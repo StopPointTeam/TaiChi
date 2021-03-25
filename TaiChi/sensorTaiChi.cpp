@@ -86,13 +86,13 @@ void Sensor::FlashGraySensor(uint8_t gray_sensor_num)
     //调试输出闪烁信息
     switch (gray_sensor_num)
     {
-    case GRAY_1: NeoSerial.println("#SENSOR: FLASH GRAY_1 NOW!"); break;
-    case GRAY_2: NeoSerial.println("#SENSOR: FLASH GRAY_2 NOW!"); break;
-    case GRAY_3: NeoSerial.println("#SENSOR: FLASH GRAY_3 NOW!"); break;
-    case GRAY_4: NeoSerial.println("#SENSOR: FLASH GRAY_4 NOW!"); break;
-    case GRAY_5: NeoSerial.println("#SENSOR: FLASH GRAY_5 NOW!"); break;
-    case GRAY_6: NeoSerial.println("#SENSOR: FLASH GRAY_6 NOW!"); break;
-    case GRAY_7: NeoSerial.println("#SENSOR: FLASH GRAY_7 NOW!");
+    case GRAY_1: NeoSerial.println(F("#SENSOR: FLASH GRAY_1 NOW!")); break;
+    case GRAY_2: NeoSerial.println(F("#SENSOR: FLASH GRAY_2 NOW!")); break;
+    case GRAY_3: NeoSerial.println(F("#SENSOR: FLASH GRAY_3 NOW!")); break;
+    case GRAY_4: NeoSerial.println(F("#SENSOR: FLASH GRAY_4 NOW!")); break;
+    case GRAY_5: NeoSerial.println(F("#SENSOR: FLASH GRAY_5 NOW!")); break;
+    case GRAY_6: NeoSerial.println(F("#SENSOR: FLASH GRAY_6 NOW!")); break;
+    case GRAY_7: NeoSerial.println(F("#SENSOR: FLASH GRAY_7 NOW!"));
     }
     #endif
 
@@ -125,17 +125,17 @@ bool Sensor::IsWhite(uint8_t gray_sensor_num)
     //调试输出灰度值
     switch (gray_sensor_num)
     {
-    case GRAY_1: NeoSerial.print("#SENSOR: GRAY_1 and gate_val: "); break;
-    case GRAY_2: NeoSerial.print("#SENSOR: GRAY_2 and gate_val: "); break;
-    case GRAY_3: NeoSerial.print("#SENSOR: GRAY_3 and gate_val: "); break;
-    case GRAY_4: NeoSerial.print("#SENSOR: GRAY_4 and gate_val: "); break;
-    case GRAY_5: NeoSerial.print("#SENSOR: GRAY_5 and gate_val: "); break;
-    case GRAY_6: NeoSerial.print("#SENSOR: GRAY_6 and gate_val: "); break;
-    case GRAY_7: NeoSerial.print("#SENSOR: GRAY_7 and gate_val: ");
+    case GRAY_1: NeoSerial.print(F("#SENSOR: GRAY_1 and gate_val: ")); break;
+    case GRAY_2: NeoSerial.print(F("#SENSOR: GRAY_2 and gate_val: ")); break;
+    case GRAY_3: NeoSerial.print(F("#SENSOR: GRAY_3 and gate_val: ")); break;
+    case GRAY_4: NeoSerial.print(F("#SENSOR: GRAY_4 and gate_val: ")); break;
+    case GRAY_5: NeoSerial.print(F("#SENSOR: GRAY_5 and gate_val: ")); break;
+    case GRAY_6: NeoSerial.print(F("#SENSOR: GRAY_6 and gate_val: ")); break;
+    case GRAY_7: NeoSerial.print(F("#SENSOR: GRAY_7 and gate_val: "));
     }
 
     NeoSerial.print(gray_val);
-    NeoSerial.print(" ");
+    NeoSerial.print(F(" "));
     NeoSerial.println(gray_gate);
     #endif
 
@@ -170,24 +170,24 @@ float Sensor::GrayDeviationRate(uint8_t gray_sensor_num)
     //调试输出灰度值
     switch (gray_sensor_num)
     {
-    case GRAY_1: NeoSerial.print("#SENSOR: GRAY_1 and gate_val: "); break;
-    case GRAY_2: NeoSerial.print("#SENSOR: GRAY_2 and gate_val: "); break;
-    case GRAY_3: NeoSerial.print("#SENSOR: GRAY_3 and gate_val: "); break;
-    case GRAY_4: NeoSerial.print("#SENSOR: GRAY_4 and gate_val: "); break;
-    case GRAY_5: NeoSerial.print("#SENSOR: GRAY_5 and gate_val: "); break;
-    case GRAY_6: NeoSerial.print("#SENSOR: GRAY_6 and gate_val: "); break;
-    case GRAY_7: NeoSerial.print("#SENSOR: GRAY_7 and gate_val: ");
+    case GRAY_1: NeoSerial.print(F("#SENSOR: GRAY_1 and gate_val: ")); break;
+    case GRAY_2: NeoSerial.print(F("#SENSOR: GRAY_2 and gate_val: ")); break;
+    case GRAY_3: NeoSerial.print(F("#SENSOR: GRAY_3 and gate_val: ")); break;
+    case GRAY_4: NeoSerial.print(F("#SENSOR: GRAY_4 and gate_val: ")); break;
+    case GRAY_5: NeoSerial.print(F("#SENSOR: GRAY_5 and gate_val: ")); break;
+    case GRAY_6: NeoSerial.print(F("#SENSOR: GRAY_6 and gate_val: ")); break;
+    case GRAY_7: NeoSerial.print(F("#SENSOR: GRAY_7 and gate_val: "));
     }
 
     NeoSerial.print(gray_val);
-    NeoSerial.print(" ");
+    NeoSerial.print(F(" "));
     NeoSerial.print(gray_gate);
     #endif
 
     deviarion_rate = (float)gray_val / gray_gate;
 
     #ifdef SENSOR_DEBUG
-    NeoSerial.print(" deviarion_rate: ");
+    NeoSerial.print(F(" deviarion_rate: "));
     NeoSerial.println(deviarion_rate);
     #endif
 
@@ -210,12 +210,12 @@ bool Sensor::IsPushed(uint8_t button_num)
     #ifdef SENSOR_DEBUG
     //调试输出按钮状态
     if (button_num == BUTTON_1)
-        NeoSerial.print("#SENSOR: BUTTON_1: ");
-    else NeoSerial.print("#SENSOR: BUTTON_2: ");
+        NeoSerial.print(F("#SENSOR: BUTTON_1: "));
+    else NeoSerial.print(F("#SENSOR: BUTTON_2: "));
 
     if (button_val == LOW)
-        NeoSerial.println("pushed");
-    else NeoSerial.println("released");
+        NeoSerial.println(F("pushed"));
+    else NeoSerial.println(F("released"));
     #endif    
 
     if (button_val == LOW)
@@ -235,7 +235,7 @@ void Sensor::StartHMC5883(void)
 
     #ifdef SENSOR_DEBUG
     //调试输出
-    NeoSerial.println("#SENSOR: Start HMC5883");
+    NeoSerial.println(F("#SENSOR: Start HMC5883"));
     #endif
 }
 
@@ -243,7 +243,7 @@ void Sensor::StartHMC5883(void)
 //返回朝向角
 float Sensor::GetAngle(void)
 {
-    long x, y, z;
+    long x = 0, y = 0, z = 0;
 
     Wire.beginTransmission(HMC5883_ADDRESS);
     Wire.write(0x03);
@@ -270,7 +270,7 @@ float Sensor::GetAngle(void)
     
     #ifdef SENSOR_DEBUG
     //调试输出朝向角
-    NeoSerial.print("#SENSOR: Angle Value: ");
+    NeoSerial.print(F("#SENSOR: Angle Value: "));
     NeoSerial.println(angle);  
     #endif
 

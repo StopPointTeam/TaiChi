@@ -70,7 +70,7 @@ Radio radio; //通讯实例
 
 //****************************************全局变量****************************************
 //GND Pins
-uint8_t gnd_pins[8] = {14, 15, 32, 33, 34, 35, 36, 37};
+const uint8_t gnd_pins[8] PROGMEM = {14, 15, 32, 33, 34, 35, 36, 37};
 
 //EEPROM 储存的调试数据
 struct StroageInfo
@@ -190,14 +190,14 @@ int loop_time = 0;
 //错误消息函数，用于在出现致命错误后结束程序
 void DebugCanNotContinue(char* message)
 {
-    NeoSerial.print("#TAICHI: CAN NOT CONTINUE WHEN "); NeoSerial.println(message);
-    NeoSerial.print("#TAICHI: loop_time: "); NeoSerial.println(loop_time);
-    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(passed_point.x); NeoSerial.print(", "); NeoSerial.print(passed_point.y); NeoSerial.print("]");
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)passed_point.type);
-    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(next_point.x); NeoSerial.print(", "); NeoSerial.print(next_point.y); NeoSerial.print("]");
-    NeoSerial.print(" next_position: "); NeoSerial.print((int)next_position);
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)next_point.type);
-    NeoSerial.print("#TAICHI: is_claw_catch: "); NeoSerial.print((int)is_claw_catch); NeoSerial.print(" is_claw_ok: "); NeoSerial.println((int)is_claw_ok);
+    NeoSerial.print(F("#TAICHI: CAN NOT CONTINUE WHEN ")); NeoSerial.println(message);
+    NeoSerial.print(F("#TAICHI: loop_time: ")); NeoSerial.println(loop_time);
+    NeoSerial.print(F("#TAICHI: pass: [")); NeoSerial.print(passed_point.x); NeoSerial.print(F(", ")); NeoSerial.print(passed_point.y); NeoSerial.print(F("]"));
+    NeoSerial.print(F(" TYPE: ")); NeoSerial.println((int)passed_point.type);
+    NeoSerial.print(F("#TAICHI: next: [")); NeoSerial.print(next_point.x); NeoSerial.print(F(", ")); NeoSerial.print(next_point.y); NeoSerial.print(F("]"));
+    NeoSerial.print(F(" next_position: ")); NeoSerial.print((int)next_position);
+    NeoSerial.print(F(" TYPE: ")); NeoSerial.println((int)next_point.type);
+    NeoSerial.print(F("#TAICHI: is_claw_catch: ")); NeoSerial.print((int)is_claw_catch); NeoSerial.print(F(" is_claw_ok: ")); NeoSerial.println((int)is_claw_ok);
     SRamDisplay();
 
     while (1) {}
@@ -210,7 +210,7 @@ void setup()
 {
     #ifdef TAICHI_DEBUG
     NeoSerial.begin(DEBUG_BAUT_RATE);
-    NeoSerial.println("#TAICHI: ======================setup()=====================");
+    NeoSerial.println(F("#TAICHI: ======================setup()====================="));
     SRamDisplay();
     #endif
 
@@ -248,14 +248,14 @@ void loop()
     
     #ifdef TAICHI_DEBUG
     loop_time++;
-    NeoSerial.println("#TAICHI: ====================New loop()====================");
-    NeoSerial.print("#TAICHI: loop_time: "); NeoSerial.println(loop_time);
-    NeoSerial.print("#TAICHI: pass: ["); NeoSerial.print(passed_point.x); NeoSerial.print(", "); NeoSerial.print(passed_point.y); NeoSerial.print("]");
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)passed_point.type);
-    NeoSerial.print("#TAICHI: next: ["); NeoSerial.print(next_point.x); NeoSerial.print(", "); NeoSerial.print(next_point.y); NeoSerial.print("]");
-    NeoSerial.print(" next_position: "); NeoSerial.print((int)next_position);
-    NeoSerial.print(" TYPE: "); NeoSerial.println((int)next_point.type);
-    NeoSerial.print("#TAICHI: is_claw_catch: "); NeoSerial.print((int)is_claw_catch); NeoSerial.print(" is_claw_ok: "); NeoSerial.println((int)is_claw_ok);
+    NeoSerial.println(F("#TAICHI: ====================New loop()===================="));
+    NeoSerial.print(F("#TAICHI: loop_time: ")); NeoSerial.println(loop_time);
+    NeoSerial.print(F("#TAICHI: pass: [")); NeoSerial.print(passed_point.x); NeoSerial.print(F(", ")); NeoSerial.print(passed_point.y); NeoSerial.print(F("]"));
+    NeoSerial.print(F(" TYPE: ")); NeoSerial.println((int)passed_point.type);
+    NeoSerial.print(F("#TAICHI: next: [")); NeoSerial.print(next_point.x); NeoSerial.print(F(", ")); NeoSerial.print(next_point.y); NeoSerial.print(F("]"));
+    NeoSerial.print(F(" next_position: ")); NeoSerial.print((int)next_position);
+    NeoSerial.print(F(" TYPE: ")); NeoSerial.println((int)next_point.type);
+    NeoSerial.print(F("#TAICHI: is_claw_catch: ")); NeoSerial.print((int)is_claw_catch); NeoSerial.print(F(" is_claw_ok: ")); NeoSerial.println((int)is_claw_ok);
     SRamDisplay();
     #endif
 
@@ -488,7 +488,7 @@ void loop()
     route.UpdatePosition();
 
     #ifdef TAICHI_DEBUG
-    NeoSerial.println("#TAICHI: ====================End loop()====================");
+    NeoSerial.println(F("#TAICHI: ====================End loop()===================="));
     #endif
 }
 
@@ -529,17 +529,17 @@ void ReadFromEEPROM(void)
     delay_time_after_turn = stroage_info.delay_time_after_turn;
 
     #ifdef TAICHI_DEBUG
-    NeoSerial.println("#TAICHI: Data based on EEPROM : ");
-    NeoSerial.print("north_left_angle: "); NeoSerial.println(north_left_angle);
-    NeoSerial.print("north_right_angle: "); NeoSerial.println(north_right_angle);
-    NeoSerial.print("west_left_angle: "); NeoSerial.println(west_left_angle);
-    NeoSerial.print("west_right_angle: "); NeoSerial.println(west_right_angle);
-    NeoSerial.print("south_left_angle: "); NeoSerial.println(south_left_angle);
-    NeoSerial.print("south_right_angle: "); NeoSerial.println(south_right_angle);
-    NeoSerial.print("east_left_angle: "); NeoSerial.println(east_left_angle);
-    NeoSerial.print("east_right_angle: "); NeoSerial.println(east_right_angle);
-    NeoSerial.print("gray_7_gate: "); NeoSerial.println(stroage_info.gray_7_gate);
-    NeoSerial.print("delay_time_after_turn: "); NeoSerial.println(delay_time_after_turn);
+    NeoSerial.println(F("#TAICHI: Data based on EEPROM : "));
+    NeoSerial.print(F("north_left_angle: ")); NeoSerial.println(north_left_angle);
+    NeoSerial.print(F("north_right_angle: ")); NeoSerial.println(north_right_angle);
+    NeoSerial.print(F("west_left_angle: ")); NeoSerial.println(west_left_angle);
+    NeoSerial.print(F("west_right_angle: ")); NeoSerial.println(west_right_angle);
+    NeoSerial.print(F("south_left_angle: ")); NeoSerial.println(south_left_angle);
+    NeoSerial.print(F("south_right_angle: ")); NeoSerial.println(south_right_angle);
+    NeoSerial.print(F("east_left_angle: ")); NeoSerial.println(east_left_angle);
+    NeoSerial.print(F("east_right_angle: ")); NeoSerial.println(east_right_angle);
+    NeoSerial.print(F("gray_7_gate: ")); NeoSerial.println(stroage_info.gray_7_gate);
+    NeoSerial.print(F("delay_time_after_turn: ")); NeoSerial.println(delay_time_after_turn);
     #endif
 }
 
@@ -571,7 +571,7 @@ void CheckGrayStatus(void)
     }
 
     #ifdef TAICHI_DEBUG
-    NeoSerial.println("#TAICHI: Gray Sensor Status OK!");
+    NeoSerial.println(F("#TAICHI: Gray Sensor Status OK!"));
     #endif
 }
 
@@ -685,8 +685,8 @@ void LineForward(uint8_t end_position, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
     //调试输出沿线直行状态
-    NeoSerial.print("#TAICHI: Line Forward");
-    NeoSerial.print(" end_position: ");
+    NeoSerial.print(F("#TAICHI: Line Forward"));
+    NeoSerial.print(F(" end_position: "));
     NeoSerial.println((int)end_position);
     #endif
 
@@ -749,7 +749,7 @@ void LineForward(uint8_t end_position, float speed_rate)
 
     #ifdef TAICHI_DEBUG
     //调试输出沿线直行结束
-    NeoSerial.println("#TAICHI: End Line Forward");
+    NeoSerial.println(F("#TAICHI: End Line Forward"));
     #endif
 }
 
@@ -759,8 +759,8 @@ void LineBackward(uint8_t end_position, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
     //调试输出沿线后退状态
-    NeoSerial.print("#TAICHI: Line Backward");
-    NeoSerial.print(" end_position: ");
+    NeoSerial.print(F("#TAICHI: Line Backward"));
+    NeoSerial.print(F(" end_position: "));
     NeoSerial.println((int)end_position);
     #endif
 
@@ -811,7 +811,7 @@ void LineBackward(uint8_t end_position, float speed_rate)
 
     #ifdef TAICHI_DEBUG
     //调试输出沿线后退结束
-    NeoSerial.println("#TAICHI: End Line Backward");
+    NeoSerial.println(F("#TAICHI: End Line Backward"));
     #endif
 }
 
@@ -830,7 +830,7 @@ void TurnDirection(float speed_rate)
 
         #ifdef TAICHI_DEBUG
         //调试输出直行或后退或转向状态
-        NeoSerial.println("#TAICHI: JUMP THE RELEASE/GETOUT/GAIN POINT FOR STATUS REASON");
+        NeoSerial.println(F("#TAICHI: JUMP THE RELEASE/GETOUT/GAIN POINT FOR STATUS REASON"));
         #endif
     }
     
@@ -838,8 +838,8 @@ void TurnDirection(float speed_rate)
     
     #ifdef TAICHI_DEBUG
     //调试输出直行或后退或转向状态
-    NeoSerial.print("#TAICHI: Turn Direction");
-    NeoSerial.print(" direction: ");
+    NeoSerial.print(F("#TAICHI: Turn Direction"));
+    NeoSerial.print(F(" direction: "));
     NeoSerial.println((int)direction);
     #endif
     
@@ -918,7 +918,7 @@ void TurnDirection(float speed_rate)
 
     #ifdef TAICHI_DEBUG
     //调试输出直行或后退或转向结束
-    NeoSerial.println("#TAICHI: End Turn Direction");
+    NeoSerial.println(F("#TAICHI: End Turn Direction"));
     #endif
 }
 
@@ -949,12 +949,12 @@ bool CatchAndCheck(uint8_t type, float speed)
     while (millis() - begin_time < catch_delay_time)
     {
         #ifndef DISABLE_CLAW_CHECK
-        if (sensor.IsPushed(BUTTON_1)) //开关 1 闭合，即爪子两端接触，说明抓取失败
+        if (sensor.IsPushed(BUTTON_2)) //开关 2 闭合，即爪子两端接触，说明抓取失败
         {
             #ifdef TAICHI_DEBUG
             //调试输出失败信息
-            NeoSerial.print("#TAICHI: **********FAIL CATCH!**********");
-            NeoSerial.print(" catch_times: "); NeoSerial.println((int)catch_times);
+            NeoSerial.print(F("#TAICHI: **********FAIL CATCH!**********"));
+            NeoSerial.print(F(" catch_times: ")); NeoSerial.println((int)catch_times);
             #endif
 
             if (type == CATCH_TYPE_GAIN)
@@ -988,14 +988,14 @@ bool CatchAndCheck(uint8_t type, float speed)
     #ifndef DISABLE_CLAW_CHECK
     #ifdef TAICHI_DEBUG
     //调试输出成功信息
-    NeoSerial.println("#TAICHI: SUCCESS CATCH!");
+    NeoSerial.println(F("#TAICHI: SUCCESS CATCH!"));
     #endif
     #endif
 
     #ifdef DISABLE_CLAW_CHECK
     #ifdef TAICHI_DEBUG
     //调试输出结束信息
-    NeoSerial.println("#TAICHI: CATCH WITHOUT CHECK!");
+    NeoSerial.println(F("#TAICHI: CATCH WITHOUT CHECK!"));
     #endif
     #endif
 
@@ -1010,7 +1010,7 @@ bool OpenClawAndCheck(void)
     #ifdef DISABLE_CLAW_CHECK
     #ifdef TAICHI_DEBUG
     //调试输出信息
-    NeoSerial.println("#TAICHI: DISABLE CLAW CHECK!");
+    NeoSerial.println(F("#TAICHI: DISABLE CLAW CHECK!"));
     #endif
 
     is_claw_ok = true;
@@ -1026,11 +1026,11 @@ bool OpenClawAndCheck(void)
     //等待完成动作
     while (millis() - begin_time < CLAW_OPEN_USE_TIME)
     {
-        if (!sensor.IsPushed(BUTTON_1)) //开关 1 打开，即爪子两端脱离接触，说明打开爪子成功
+        if (!sensor.IsPushed(BUTTON_2)) //开关 2 打开，即爪子两端脱离接触，说明打开爪子成功
         {
             #ifdef TAICHI_DEBUG
             //调试输出成功信息
-            NeoSerial.println("#TAICHI: SUCCESS OPEN CLAW!");
+            NeoSerial.println(F("#TAICHI: SUCCESS OPEN CLAW!"));
             #endif
             
             is_claw_ok = true;
@@ -1040,7 +1040,7 @@ bool OpenClawAndCheck(void)
 
     #ifdef TAICHI_DEBUG
     //调试输出失败信息
-    NeoSerial.println("#TAICHI: $$$$$$$$$$FAIL CLAW!$$$$$$$$$$");
+    NeoSerial.println(F("#TAICHI: $$$$$$$$$$FAIL CLAW!$$$$$$$$$$"));
     #endif
     
     is_claw_ok = false;

@@ -277,7 +277,7 @@ Point* Route::AddPoint(Point* front_point, int8_t x, int8_t y, uint8_t type, Poi
 void Route::InitBaseRoute(void)
 {
     //基本路径数组
-    int8_t base_route[][3] = 
+    const static int8_t base_route [][3] PROGMEM = 
     {
         {0, 0, NORMAL_POINT},
         {0, 1, NORMAL_POINT},

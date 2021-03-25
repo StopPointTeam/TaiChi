@@ -45,9 +45,9 @@ void Servo::MoveServo(uint8_t servo_id, uint16_t position, uint16_t time)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组执行信息
-    NeoSerial.print("#SERVO:  MoveServo: "); NeoSerial.print((int)servo_id); 
-    NeoSerial.print(" position: "); NeoSerial.print((int)position); 
-    NeoSerial.print(" time: "); NeoSerial.println((int)time);
+    NeoSerial.print(F("#SERVO:  MoveServo: ")); NeoSerial.print((int)servo_id); 
+    NeoSerial.print(F(" position: ")); NeoSerial.print((int)position); 
+    NeoSerial.print(F(" time: ")); NeoSerial.println((int)time);
     #endif
 }
 
@@ -70,7 +70,7 @@ void Servo::RunActionGroup(uint8_t action_num, uint16_t times)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组执行信息
-    NeoSerial.print("#SERVO:  RunServoActionGroup: ");
+    NeoSerial.print(F("#SERVO:  RunServoActionGroup: "));
     NeoSerial.println((int)action_num);
     #endif
 }
@@ -89,7 +89,7 @@ void Servo::StopActionGroup(void)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组停止信息
-    NeoSerial.println("#SERVO:  StopServoActionGroup");
+    NeoSerial.println(F("#SERVO:  StopServoActionGroup"));
     #endif
 }
 
@@ -112,9 +112,9 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组速度设定信息
-    NeoSerial.print("#SERVO:  SetServoActionGroupSpeed: ");
+    NeoSerial.print(F("#SERVO:  SetServoActionGroupSpeed: "));
     NeoSerial.print((int)action_num);
-    NeoSerial.print(" Speed: ");
+    NeoSerial.print(F(" Speed: "));
     NeoSerial.println(speed);
     #endif
 }

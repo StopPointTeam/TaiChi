@@ -79,10 +79,10 @@ void Radio::Send(char* message, uint8_t send_type, uint8_t send_times)
     }
 
     #ifdef RADIO_DEBUG
-    NeoSerial.print("#RADIO:  SEND: ");
+    NeoSerial.print(F("#RADIO:  SEND: "));
     full_message[FULL_MESSAGE_SIZE - 1] = '\0';
     NeoSerial.print(full_message);
-    NeoSerial.print(" TIMES: ");
+    NeoSerial.print(F(" TIMES: "));
     NeoSerial.println(send_times);
     #endif
 
@@ -179,7 +179,7 @@ bool Radio::Receive(uint8_t ch, uint8_t status)
                     is_end_record = true;
                     
                     #ifdef RADIO_DEBUG
-                    NeoSerial.print("#RADIO:  RECEIVE: ");
+                    NeoSerial.print(F("#RADIO:  RECEIVE: "));
                     NeoSerial.println(message);
                     #endif
                     
@@ -188,7 +188,7 @@ bool Radio::Receive(uint8_t ch, uint8_t status)
                 else //位数校验失败
                 {
                     #ifdef RADIO_DEBUG
-                    NeoSerial.println("#RADIO:  RECEIVE CHECK FAIL!");
+                    NeoSerial.println(F("#RADIO:  RECEIVE CHECK FAIL!"));
                     #endif
                 }
             }
