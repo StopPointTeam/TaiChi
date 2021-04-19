@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdint.h>
 #include <NeoHWSerial.h>
 
+#define NeoSerialDebug NeoSerial3
+
 /*! \mainpage
 
 A full explanation in french can be read at http://www.locoduino.org/ecrire/?exec=article&action=redirect&type=article&id=149 .
@@ -119,27 +121,27 @@ extern uint8_t *__bss_end;
 // Memory addresses
 //
 
-/// Print data start on NeoSerial console.
-#define MEMORY_PRINT_START		{ NeoSerial.print(F("Data start:")); NeoSerial.println((int) &__data_start); }
-/// Print data end / heap start on NeoSerial console.
-#define MEMORY_PRINT_HEAPSTART	{ NeoSerial.print(F("Heap start:")); NeoSerial.println((int)&__heap_start); }
-/// Print heap end / free ram area on NeoSerial console.
-#define MEMORY_PRINT_HEAPEND	{ NeoSerial.print(F("Heap end:")); NeoSerial.println(__brkval == 0 ? (int)&__heap_start : (int)__brkval); }
-/// Print free ram end / stack start on NeoSerial console.
-#define MEMORY_PRINT_STACKSTART	{ NeoSerial.print(F("Stack start:")); NeoSerial.println((int) SP); }
-/// Print end of memory on NeoSerial console.
-#define MEMORY_PRINT_END		{ NeoSerial.print(F("Stack end:")); NeoSerial.println((int) RAMEND); }
+/// Print data start on NeoSerialDebug console.
+#define MEMORY_PRINT_START		{ NeoSerialDebug.print(F("Data start:")); NeoSerialDebug.println((int) &__data_start); }
+/// Print data end / heap start on NeoSerialDebug console.
+#define MEMORY_PRINT_HEAPSTART	{ NeoSerialDebug.print(F("Heap start:")); NeoSerialDebug.println((int)&__heap_start); }
+/// Print heap end / free ram area on NeoSerialDebug console.
+#define MEMORY_PRINT_HEAPEND	{ NeoSerialDebug.print(F("Heap end:")); NeoSerialDebug.println(__brkval == 0 ? (int)&__heap_start : (int)__brkval); }
+/// Print free ram end / stack start on NeoSerialDebug console.
+#define MEMORY_PRINT_STACKSTART	{ NeoSerialDebug.print(F("Stack start:")); NeoSerialDebug.println((int) SP); }
+/// Print end of memory on NeoSerialDebug console.
+#define MEMORY_PRINT_END		{ NeoSerialDebug.print(F("Stack end:")); NeoSerialDebug.println((int) RAMEND); }
 
-/// Print heap size on NeoSerial console.
-#define MEMORY_PRINT_HEAPSIZE	{ NeoSerial.print(F("Heap size:")); NeoSerial.println((int) (__brkval == 0 ? (int)&__heap_start : (int)__brkval) - (int)&__heap_start); }
-/// Print stack size on NeoSerial console.
-#define MEMORY_PRINT_STACKSIZE	{ NeoSerial.print(F("Stack size:")); NeoSerial.println((int) RAMEND - (int)SP); }
-/// Print free ram size on NeoSerial console.
-#define MEMORY_PRINT_FREERAM	{ NeoSerial.print(F("Free ram:")); NeoSerial.println((int) SP - (int) (__brkval == 0 ? (int)&__heap_start : (int)__brkval)); }
-/// Print total SRAM size on NeoSerial console.
-#define MEMORY_PRINT_TOTALSIZE	{ NeoSerial.print(F("SRAM size:")); NeoSerial.println((int) RAMEND - (int) &__data_start); }
+/// Print heap size on NeoSerialDebug console.
+#define MEMORY_PRINT_HEAPSIZE	{ NeoSerialDebug.print(F("Heap size:")); NeoSerialDebug.println((int) (__brkval == 0 ? (int)&__heap_start : (int)__brkval) - (int)&__heap_start); }
+/// Print stack size on NeoSerialDebug console.
+#define MEMORY_PRINT_STACKSIZE	{ NeoSerialDebug.print(F("Stack size:")); NeoSerialDebug.println((int) RAMEND - (int)SP); }
+/// Print free ram size on NeoSerialDebug console.
+#define MEMORY_PRINT_FREERAM	{ NeoSerialDebug.print(F("Free ram:")); NeoSerialDebug.println((int) SP - (int) (__brkval == 0 ? (int)&__heap_start : (int)__brkval)); }
+/// Print total SRAM size on NeoSerialDebug console.
+#define MEMORY_PRINT_TOTALSIZE	{ NeoSerialDebug.print(F("SRAM size:")); NeoSerialDebug.println((int) RAMEND - (int) &__data_start); }
 
-/// Displays the 'map' of the current state of the Arduino's SRAM memory on the NeoSerial console.
+/// Displays the 'map' of the current state of the Arduino's SRAM memory on the NeoSerialDebug console.
 void SRamDisplay(void);
 
 //
@@ -153,7 +155,7 @@ void SRamDisplay(void);
 #define STACK_COMPUTE      { mu_stack_size = (RAMEND - SP) > mu_stack_size ? (RAMEND - SP) : mu_stack_size;}
 
 /// Compute the current maximum and show it now with customized text.
-#define STACK_PRINT_TEXT(text)  { STACK_COMPUTE; NeoSerial.print(text);  NeoSerial.println(mu_stack_size); }
+#define STACK_PRINT_TEXT(text)  { STACK_COMPUTE; NeoSerialDebug.print(text);  NeoSerialDebug.println(mu_stack_size); }
 
 /// Compute the current maximum and show it now with default text.
 #define STACK_PRINT        STACK_PRINT_TEXT(F("Stack Maximum Size (Instrumentation method): "));
@@ -163,7 +165,7 @@ void SRamDisplay(void);
 //
 
 /// Shows the current free SRAM memory with customized text.
-#define FREERAM_PRINT_TEXT(text)  NeoSerial.print(text);  NeoSerial.println(mu_freeRam());
+#define FREERAM_PRINT_TEXT(text)  NeoSerialDebug.print(text);  NeoSerialDebug.println(mu_freeRam());
 
 /// Shows the current free SRAM memory with default text.
 #define FREERAM_PRINT      FREERAM_PRINT_TEXT(F("Free Ram Size: "));
@@ -179,7 +181,7 @@ int mu_freeRam(void);
 uint16_t mu_StackCount(void);
 
 /// Compute the current maximum and show it now with customized text.
-#define STACKPAINT_PRINT_TEXT(text)  { NeoSerial.print(text);  NeoSerial.println(mu_StackCount()); }
+#define STACKPAINT_PRINT_TEXT(text)  { NeoSerialDebug.print(text);  NeoSerialDebug.println(mu_StackCount()); }
 
 /// Compute the current maximum and show it now with default text.
 #define STACKPAINT_PRINT        STACKPAINT_PRINT_TEXT(F("Stack Maximum Size (Painting method): "));

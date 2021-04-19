@@ -5,6 +5,9 @@
 //注释以关闭调试功能
 #define MOVE_DEBUG
 
+#ifdef MOVE_DEBUG
+#define NeoSerialDebug NeoSerial
+#endif
 
 //轮胎定义
 #define LEFT_A_WHEEL 0

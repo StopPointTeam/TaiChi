@@ -7,6 +7,9 @@
 //注释以关闭调试功能
 #define SERVO_DEBUG
 
+#ifdef SERVO_DEBUG
+#define NeoSerialDebug NeoSerial3
+#endif
 
 //与舵机控制板连接串口
 //使用 Mega 板 18 19 作为串口通信端口

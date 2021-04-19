@@ -23,11 +23,13 @@ void Radio::BeginTransmit(unsigned long baud_rate)
 
 
 //发送
-void Radio::Send(char* message, uint8_t send_type, uint8_t send_times)
+void Radio::Send(const char* message, uint8_t send_type, uint8_t send_times)
 {
     //强制发送，禁用接收中断，防止发送被打断
     if (send_type == FORCE_SEND)
         DisableReceiveInterrupt();
+
+    static unsigned char send_code = '0';
 
     //生成完整通信包
     char full_message[FULL_MESSAGE_SIZE];
@@ -46,7 +48,14 @@ void Radio::Send(char* message, uint8_t send_type, uint8_t send_times)
         }
         else if (i == BLANK_CHAR_LENGTH)
         {
-            full_message[i] = START_CHAR;
+            full_message[i] = CODE_CHAR;
+
+            full_message[++i] = send_code++;
+
+            if (send_code > '9')
+                send_code = '0';
+
+            full_message[++i] = START_CHAR;
         }
         else if (j < message_length && j < MAX_REAL_MESSAGE_SIZE)
         {
@@ -79,11 +88,11 @@ void Radio::Send(char* message, uint8_t send_type, uint8_t send_times)
     }
 
     #ifdef RADIO_DEBUG
-    NeoSerial.print(F("#RADIO:  SEND: "));
+    NeoSerialDebug.print(F("#RADIO:  SEND: "));
     full_message[FULL_MESSAGE_SIZE - 1] = '\0';
-    NeoSerial.print(full_message);
-    NeoSerial.print(F(" TIMES: "));
-    NeoSerial.println(send_times);
+    NeoSerialDebug.print(full_message);
+    NeoSerialDebug.print(F(" TIMES: "));
+    NeoSerialDebug.println(send_times);
     #endif
 
     if (send_type == FORCE_SEND)
@@ -115,102 +124,103 @@ void Radio::EnableReceiveInterrupt() //恢复接收中断
 //接收，使用中断触发
 bool Radio::Receive(uint8_t ch, uint8_t status)
 {
-    static long begin_time = millis();
+    static bool is_code_record = false;
     static bool is_start_record = false;
     static bool is_check_record = false;
-    static bool is_end_record = false;
-    static char message[FULL_MESSAGE_SIZE];
-    static char check_str[CHECK_STR_LENGTH + 1];
+    static char message[FULL_MESSAGE_SIZE] = "";
+    static char check_str[CHECK_STR_LENGTH + 1] = "";
+    static unsigned char this_package_code = 0;
+    static unsigned char last_package_code = 0;
     static uint8_t i = 0, j = 0;
 
-    //若上一次中断已在 100 ms前，可以认为当前是一次新的传输
-    if (millis() - begin_time > 100)
+    switch (ch)
     {
-        begin_time = millis(); //更新时间
-        
+    case CODE_CHAR:
+    {
+        is_code_record = true;
         is_start_record = false;
         is_check_record = false;
-        is_end_record = false;
-    }
-    else
+        
+        //重置字符串
+        for (uint8_t k = 0; k < i; k++)
+            message[k] = '\0';
+        for (uint8_t k = 0; k < j; k++)
+            check_str[k] = '\0';
+
+        i = 0;
+        j = 0;
+    } break;
+
+    case START_CHAR:
     {
-        begin_time = millis(); //更新时间
-
-        switch (ch)
+        if (is_code_record == true)
         {
-        case START_CHAR:
+            is_code_record = false;
+            is_start_record = true;
+        }
+    } break;
+
+    case CHECK_CHAR:
+    {
+        if (is_start_record == true)
         {
-            if (is_end_record == false)
-            {
-                is_start_record = true;
-                is_check_record = false;
-                
-                //重置字符串
-                for (uint8_t k = 0; k < i; k++)
-                    message[k] = '\0';
-                for (uint8_t k = 0; k < j; k++)
-                    check_str[k] = '\0';
+            is_start_record = false;
+            is_check_record = true;
+        }
+    } break;
 
-                i = 0;
-                j = 0;
-            }
-        } break;
-
-        case CHECK_CHAR:
+    case END_CHAR:
+    {
+        if (is_check_record == true)
         {
-            if (is_end_record == false && is_start_record == true)
-            {
-                is_start_record = false;
-                is_check_record = true;
-            }
-        } break;
+            is_check_record = false;
 
-        case END_CHAR:
-        {
-            if (is_end_record == false && is_check_record == true)
-            {
-                is_check_record = false;
+            if (j <= CHECK_STR_LENGTH)
+                check_str[j] = '\0';
 
-                if (j <= CHECK_STR_LENGTH)
-                    check_str[j] = '\0';
-
-                if (atoi(check_str) == strlen(message)) //位数校验成功
+            if (atoi(check_str) == strlen(message)) //位数校验成功
+            {   
+                if (this_package_code != last_package_code)
                 {
-                    is_end_record = true;
-                    
                     #ifdef RADIO_DEBUG
-                    NeoSerial.print(F("#RADIO:  RECEIVE: "));
-                    NeoSerial.println(message);
+                    NeoSerialDebug.print(F("#RADIO:  RECEIVE: "));
+                    NeoSerialDebug.println(message);
                     #endif
                     
                     hm_func(message);
-                }
-                else //位数校验失败
-                {
-                    #ifdef RADIO_DEBUG
-                    NeoSerial.println(F("#RADIO:  RECEIVE CHECK FAIL!"));
-                    #endif
-                }
-            }
-        } break;
 
-        default:
-        {
-            if (is_start_record == true)
-            {
-                if (i < FULL_MESSAGE_SIZE)
-                    message[i] = ch;
-                i++;
+                    last_package_code = this_package_code;
+                }
             }
-            else if (is_check_record == true)
-            {
-                if (j <= CHECK_STR_LENGTH)
-                    check_str[j] = ch;
-                j++;
+            else //位数校验失败
+            {                
+                #ifdef RADIO_DEBUG
+                NeoSerialDebug.println(F("#RADIO:  RECEIVE CHECK FAIL!"));
+                #endif
             }
         }
+    } break;
+
+    default:
+    {
+        if (is_code_record == true)
+        {            
+            this_package_code = ch;
+        }
+        else if (is_start_record == true)
+        {
+            if (i < FULL_MESSAGE_SIZE)
+                message[i] = ch;
+            i++;
+        }
+        else if (is_check_record == true)
+        {
+            if (j <= CHECK_STR_LENGTH)
+                check_str[j] = ch;
+            j++;
         }
     }
-    
+    }
+
     return false;
 }

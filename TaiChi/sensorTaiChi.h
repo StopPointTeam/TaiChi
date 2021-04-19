@@ -5,6 +5,9 @@
 //注释以关闭调试功能
 #define SENSOR_DEBUG
 
+#ifdef SENSOR_DEBUG
+#define NeoSerialDebug NeoSerial3
+#endif
 
 //灰度传感器 OUT 接口定义
 #define GRAY_1_OUT A0

@@ -26,11 +26,11 @@ Radio radio; //通讯实例
 //抓取点移动用时
 #define CATCH_MOVE_DELAY_TIME 500
 //释放点向前移动用时
-#define RELEASE_MOVE_FORWARD_DELAY_TIME 1000
+#define RELEASE_MOVE_FORWARD_DELAY_TIME 1200
 //释放点暂停用时
 #define STOP_DELAY_TIME 500
 //释放点向后向前移动用时
-#define RELEASE_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 460
+#define RELEASE_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 480
 //增益点向后向前移动用时
 #define GAIN_MOVE_BACKWARD_AND_FORWARD_DELAY_TIME 750
 //增益点稍稍向前移动推环用时
@@ -70,7 +70,7 @@ Radio radio; //通讯实例
 
 //****************************************全局变量****************************************
 //GND Pins
-const uint8_t gnd_pins[8] PROGMEM = {14, 15, 32, 33, 34, 35, 36, 37};
+const uint8_t gnd_pins[8] = {12, 13, 32, 33, 34, 35, 36, 37};
 
 //EEPROM 储存的调试数据
 struct StroageInfo
@@ -153,11 +153,14 @@ float CalcFixSpeedRate(float gray_deviation_rate);
 #define BACK_END 1
 #define CATCH_END 2
 #define RELEASE_END 3
+
+#define ENABLE_FIX 0
+#define DISABLE_FIX 1
 //沿线直行，在触发条件后离开函数但不停止
-void LineForward(uint8_t end_position, float speed_rate = 1.0);
+void LineForward(uint8_t end_position, uint8_t type = ENABLE_FIX, float speed_rate = 1.0);
 
 //沿线后退，在触发条件后离开函数但不停止
-void LineBackward(uint8_t end_position, float speed_rate = 1.0);
+void LineBackward(uint8_t end_position, uint8_t type = ENABLE_FIX, float speed_rate = 1.0);
 
 //直行或后退或转向，完成后离开函数但不停止。会自动跳过无需前往的释放点
 void TurnDirection(float speed_rate = 1.0);
@@ -171,7 +174,7 @@ bool CatchAndCheck(uint8_t type = CATCH_TYPE_CATCH, float speed = 1.0);
 bool OpenClawAndCheck(void);
 
 //通讯消息处理函数
-void HandleMessage(char* message);
+void HandleMessage(const char* message);
 //***************************************************************************************
 
 
@@ -183,14 +186,16 @@ void HandleMessage(char* message);
 
 #include "MemoryUsage.h"
 
-#define NeoSerialDebug NeoSerial
+#define NeoSerialDebug NeoSerial3
 #define DEBUG_BAUT_RATE 115200
 
 int loop_time = 0;
 
 //错误消息函数，用于在出现致命错误后结束程序
-void DebugCanNotContinue(char* message)
+void DebugCanNotContinue(const char* message)
 {
+    move.Stop();
+    
     NeoSerialDebug.print(F("#TAICHI: CAN NOT CONTINUE WHEN ")); NeoSerialDebug.println(message);
     NeoSerialDebug.print(F("#TAICHI: loop_time: ")); NeoSerialDebug.println(loop_time);
     NeoSerialDebug.print(F("#TAICHI: pass: [")); NeoSerialDebug.print(passed_point.x); NeoSerialDebug.print(F(", ")); NeoSerialDebug.print(passed_point.y); NeoSerialDebug.print(F("]"));
@@ -226,7 +231,7 @@ void setup()
     radio.BeginTransmit();
 
     //从 EEPROM 读取数据
-    ReadFromEEPROM();
+    ReadEEPROM();
 
     //开启 HMC5883 的 I2C 通讯
     sensor.StartHMC5883();
@@ -370,7 +375,7 @@ void loop()
         is_carry = false;
         
         //沿线后退，到后端传感器接触下一条线离开函数
-        LineBackward(BACK_END);
+        LineBackward(BACK_END, DISABLE_FIX);
 
         //继续后退或转向
         TurnDirection();
@@ -394,7 +399,7 @@ void loop()
     else if (passed_point.type == GETOUT_POINT && next_point.type == NORMAL_POINT)
     {
         //沿线后退，到前端传感器接触线离开函数
-        LineBackward(FRONT_END);
+        LineBackward(FRONT_END, DISABLE_FIX);
 
         //底盘携带清空
         is_carry = false;
@@ -508,7 +513,7 @@ void SetGNDPins(void)
 
 
 //从 EEPROM 读取数据
-void ReadFromEEPROM(void)
+void ReadEEPROM(void)
 {
     //从 EEPROM 读取调试数据
     EEPROM.get(EEPROM_ADDRESS, stroage_info);
@@ -530,17 +535,17 @@ void ReadFromEEPROM(void)
     delay_time_after_turn = stroage_info.delay_time_after_turn;
 
     #ifdef TAICHI_DEBUG
-    NeoSerialDebug.println(F("#TAICHI: Data based on EEPROM : "));
-    NeoSerialDebug.print(F("north_left_angle: ")); NeoSerialDebug.println(north_left_angle);
-    NeoSerialDebug.print(F("north_right_angle: ")); NeoSerialDebug.println(north_right_angle);
-    NeoSerialDebug.print(F("west_left_angle: ")); NeoSerialDebug.println(west_left_angle);
-    NeoSerialDebug.print(F("west_right_angle: ")); NeoSerialDebug.println(west_right_angle);
-    NeoSerialDebug.print(F("south_left_angle: ")); NeoSerialDebug.println(south_left_angle);
-    NeoSerialDebug.print(F("south_right_angle: ")); NeoSerialDebug.println(south_right_angle);
-    NeoSerialDebug.print(F("east_left_angle: ")); NeoSerialDebug.println(east_left_angle);
-    NeoSerialDebug.print(F("east_right_angle: ")); NeoSerialDebug.println(east_right_angle);
-    NeoSerialDebug.print(F("gray_7_gate: ")); NeoSerialDebug.println(stroage_info.gray_7_gate);
-    NeoSerialDebug.print(F("delay_time_after_turn: ")); NeoSerialDebug.println(delay_time_after_turn);
+    NeoSerialDebug.println(F("#TAICHI: Data based on EEPROM: "));
+    NeoSerialDebug.print(F("#TAICHI: north_left_angle: ")); NeoSerialDebug.println(north_left_angle);
+    NeoSerialDebug.print(F("#TAICHI: north_right_angle: ")); NeoSerialDebug.println(north_right_angle);
+    NeoSerialDebug.print(F("#TAICHI: west_left_angle: ")); NeoSerialDebug.println(west_left_angle);
+    NeoSerialDebug.print(F("#TAICHI: west_right_angle: ")); NeoSerialDebug.println(west_right_angle);
+    NeoSerialDebug.print(F("#TAICHI: south_left_angle: ")); NeoSerialDebug.println(south_left_angle);
+    NeoSerialDebug.print(F("#TAICHI: south_right_angle: ")); NeoSerialDebug.println(south_right_angle);
+    NeoSerialDebug.print(F("#TAICHI: east_left_angle: ")); NeoSerialDebug.println(east_left_angle);
+    NeoSerialDebug.print(F("#TAICHI: east_right_angle: ")); NeoSerialDebug.println(east_right_angle);
+    NeoSerialDebug.print(F("#TAICHI: gray_7_gate: ")); NeoSerialDebug.println(stroage_info.gray_7_gate);
+    NeoSerialDebug.print(F("#TAICHI: delay_time_after_turn: ")); NeoSerialDebug.println(delay_time_after_turn);
     #endif
 }
 
@@ -686,7 +691,7 @@ float CalcFixSpeedRate(float gray_deviation_rate)
 
 
 //沿线直行，在触发条件后离开函数但不停止
-void LineForward(uint8_t end_position, float speed_rate)
+void LineForward(uint8_t end_position, uint8_t type, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
     //调试输出沿线直行状态
@@ -695,29 +700,34 @@ void LineForward(uint8_t end_position, float speed_rate)
     NeoSerialDebug.println((int)end_position);
     #endif
 
+    move.Forward(speed_rate);
+
     //记录开始时间
     unsigned long begin_time = millis();
     //记录灰度传感器匹配情况
     bool gray_match_a = false;
     bool gray_match_b = false;
 
-    while(1)
+    while (1)
     {
-        if (!sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //左侧越线
+        if (type == ENABLE_FIX)
         {
-            move.ForRightward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_3)));
-        }
-        else if (sensor.IsWhite(GRAY_3) && !sensor.IsWhite(GRAY_4)) //右侧越线
-        {
-            move.ForLeftward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_4)));
-        }
-        else if (sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //在白线上
-        {
-            move.Forward(speed_rate);
-        }
-        else //均不符合，则低速后退，尝试回到白线上
-        {
-            //move.Backward(LINE_FIND_SPEED_RATE);
+            if (!sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //左侧越线
+            {
+                move.ForRightward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_3)));
+            }
+            else if (sensor.IsWhite(GRAY_3) && !sensor.IsWhite(GRAY_4)) //右侧越线
+            {
+                move.ForLeftward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_4)));
+            }
+            else if (sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //在白线上
+            {
+                move.Forward(speed_rate);
+            }
+            else //均不符合
+            {
+                //move.Backward(LINE_FIND_SPEED_RATE);
+            }
         }
 
         if (end_position == FRONT_END) //前端接触线离开函数
@@ -760,7 +770,7 @@ void LineForward(uint8_t end_position, float speed_rate)
 
 
 //沿线后退，在触发条件后离开函数但不停止
-void LineBackward(uint8_t end_position, float speed_rate)
+void LineBackward(uint8_t end_position, uint8_t type, float speed_rate)
 {
     #ifdef TAICHI_DEBUG
     //调试输出沿线后退状态
@@ -773,23 +783,28 @@ void LineBackward(uint8_t end_position, float speed_rate)
     bool gray_match_a = false;
     bool gray_match_b = false;
 
-    while(1)
+    move.Backward(speed_rate);
+
+    while (1)
     {
-        if (!sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //左侧越线
+        if (type == ENABLE_FIX)
         {
-            move.BackRightward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_3)));
-        }
-        else if (sensor.IsWhite(GRAY_3) && !sensor.IsWhite(GRAY_4)) //右侧越线
-        {
-            move.BackLeftward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_4)));
-        }
-        else if (sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //在白线上
-        {
-            move.Backward(speed_rate);
-        }
-        else //均不符合，则低速前进，尝试回到白线上
-        {
-            //move.Forward(LINE_FIND_SPEED_RATE);
+            if (!sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //左侧越线
+            {
+                move.BackRightward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_3)));
+            }
+            else if (sensor.IsWhite(GRAY_3) && !sensor.IsWhite(GRAY_4)) //右侧越线
+            {
+                move.BackLeftward(speed_rate, CalcFixSpeedRate(sensor.GrayDeviationRate(GRAY_4)));
+            }
+            else if (sensor.IsWhite(GRAY_3) && sensor.IsWhite(GRAY_4)) //在白线上
+            {
+                move.Backward(speed_rate);
+            }
+            else //均不符合
+            {
+                //move.Forward(LINE_FIND_SPEED_RATE);
+            }
         }
 
         if (end_position == FRONT_END) //前端接触线离开函数
@@ -1054,7 +1069,7 @@ bool OpenClawAndCheck(void)
 
 
 //通讯消息处理函数
-void HandleMessage(char* message)
+void HandleMessage(const char* message)
 {
     radio.Send("Get the message: ");
     radio.Send(message);

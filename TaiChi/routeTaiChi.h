@@ -7,6 +7,10 @@
 //注释以关闭调试功能
 #define ROUTE_DEBUG
 
+#ifdef ROUTE_DEBUG
+#define NeoSerialDebug NeoSerial3
+#endif
+
 //坐标点操作定义
 #define NORMAL_POINT 0 //普通点
 #define CATCH_POINT 1 //抓取点

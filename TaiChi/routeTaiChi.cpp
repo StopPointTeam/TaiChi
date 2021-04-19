@@ -1,4 +1,11 @@
+#include <Arduino.h>
+
 #include "routeTaiChi.h"
+
+
+#ifdef ROUTE_DEBUG
+#include <NeoHWSerial.h>
+#endif
 
 
 //静态变量
@@ -56,6 +63,10 @@ void Route::SetNextNextPointType(uint8_t type)
 void Route::UpdatePosition(void)
 {
     passed_point = passed_point->next;
+
+    #ifdef ROUTE_DEBUG
+    NeoSerialDebug.println(F("#ROUTE:  UPDATE POSITION!"));
+    #endif
 }
 
 
@@ -275,9 +286,9 @@ Point* Route::AddPoint(Point* front_point, int8_t x, int8_t y, uint8_t type, Poi
 
 //生成基本路径点链
 void Route::InitBaseRoute(void)
-{
+{    
     //基本路径数组
-    const static int8_t base_route [][3] PROGMEM = 
+    const static int8_t base_route [][3] = 
     {
         {0, 0, NORMAL_POINT},
         {0, 1, NORMAL_POINT},

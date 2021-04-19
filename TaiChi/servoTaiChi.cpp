@@ -45,9 +45,9 @@ void Servo::MoveServo(uint8_t servo_id, uint16_t position, uint16_t time)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组执行信息
-    NeoSerial.print(F("#SERVO:  MoveServo: ")); NeoSerial.print((int)servo_id); 
-    NeoSerial.print(F(" position: ")); NeoSerial.print((int)position); 
-    NeoSerial.print(F(" time: ")); NeoSerial.println((int)time);
+    NeoSerialDebug.print(F("#SERVO:  MoveServo: ")); NeoSerialDebug.print((int)servo_id); 
+    NeoSerialDebug.print(F(" position: ")); NeoSerialDebug.print((int)position); 
+    NeoSerialDebug.print(F(" time: ")); NeoSerialDebug.println((int)time);
     #endif
 }
 
@@ -70,8 +70,8 @@ void Servo::RunActionGroup(uint8_t action_num, uint16_t times)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组执行信息
-    NeoSerial.print(F("#SERVO:  RunServoActionGroup: "));
-    NeoSerial.println((int)action_num);
+    NeoSerialDebug.print(F("#SERVO:  RunServoActionGroup: "));
+    NeoSerialDebug.println((int)action_num);
     #endif
 }
 
@@ -89,7 +89,7 @@ void Servo::StopActionGroup(void)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组停止信息
-    NeoSerial.println(F("#SERVO:  StopServoActionGroup"));
+    NeoSerialDebug.println(F("#SERVO:  StopServoActionGroup"));
     #endif
 }
 
@@ -112,10 +112,10 @@ void Servo::SetActionGroupSpeed(uint8_t action_num, float speed)
 
     #ifdef SERVO_DEBUG
     //调试输出动作组速度设定信息
-    NeoSerial.print(F("#SERVO:  SetServoActionGroupSpeed: "));
-    NeoSerial.print((int)action_num);
-    NeoSerial.print(F(" Speed: "));
-    NeoSerial.println(speed);
+    NeoSerialDebug.print(F("#SERVO:  SetServoActionGroupSpeed: "));
+    NeoSerialDebug.print((int)action_num);
+    NeoSerialDebug.print(F(" Speed: "));
+    NeoSerialDebug.println(speed);
     #endif
 }
 
@@ -168,7 +168,7 @@ void Servo::Release(float speed)
 
 
 //增益点放下爪子，指定速度
-void Servo::GainDown(float speed = SERVO_NORMAL_SPEED)
+void Servo::GainDown(float speed)
 {
     SetActionGroupSpeed(ACTION_GAINDOWN_NUM, speed);
     RunActionGroup(ACTION_GAINDOWN_NUM, 1);
@@ -176,7 +176,7 @@ void Servo::GainDown(float speed = SERVO_NORMAL_SPEED)
 
 
 //增益点抓取，指定速度
-void Servo::GainCatch(float speed = SERVO_NORMAL_SPEED)
+void Servo::GainCatch(float speed)
 {
     SetActionGroupSpeed(ACTION_GAINCATCH_NUM, speed);
     RunActionGroup(ACTION_GAINCATCH_NUM, 1);

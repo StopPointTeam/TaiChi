@@ -123,8 +123,8 @@ void Move::Forward(float speed_rate)
 
     #ifdef MOVE_DEBUG
     //调试输出前进状态
-    NeoSerial.print(F("#MOVE:   Move Forward"));
-    NeoSerial.print(F(" speed_rate: ")); NeoSerial.println(speed_rate);
+    NeoSerialDebug.print(F("#MOVE:   Move Forward"));
+    NeoSerialDebug.print(F(" speed_rate: ")); NeoSerialDebug.println(speed_rate);
     #endif
 }
 
@@ -143,8 +143,8 @@ void Move::Backward(float speed_rate)
 
     #ifdef MOVE_DEBUG
     //调试输出后退状态
-    NeoSerial.print(F("#MOVE:   Move Backward"));
-    NeoSerial.print(F(" speed_rate: ")); NeoSerial.println(speed_rate);
+    NeoSerialDebug.print(F("#MOVE:   Move Backward"));
+    NeoSerialDebug.print(F(" speed_rate: ")); NeoSerialDebug.println(speed_rate);
     #endif
 }
 
@@ -163,8 +163,8 @@ void Move::ForLeftward(float speed_rate, float turn_speed_rate)
 
     #ifdef MOVE_DEBUG
     //调试输出向前左转状态
-    NeoSerial.print(F("#MOVE:   Move ForLeftward"));
-    NeoSerial.print(F(" speed_rate: ")); NeoSerial.print(speed_rate); NeoSerial.print(F(" turn_speed_rate: ")); NeoSerial.println(turn_speed_rate);
+    NeoSerialDebug.print(F("#MOVE:   Move ForLeftward"));
+    NeoSerialDebug.print(F(" speed_rate: ")); NeoSerialDebug.print(speed_rate); NeoSerialDebug.print(F(" turn_speed_rate: ")); NeoSerialDebug.println(turn_speed_rate);
     #endif
 }
 
@@ -183,8 +183,8 @@ void Move::ForRightward(float speed_rate, float turn_speed_rate)
 
     #ifdef MOVE_DEBUG
     //调试输出向前右转状态
-    NeoSerial.print(F("#MOVE:   Move ForRightward"));
-    NeoSerial.print(F(" speed_rate: ")); NeoSerial.print(speed_rate); NeoSerial.print(F(" turn_speed_rate: ")); NeoSerial.println(turn_speed_rate);
+    NeoSerialDebug.print(F("#MOVE:   Move ForRightward"));
+    NeoSerialDebug.print(F(" speed_rate: ")); NeoSerialDebug.print(speed_rate); NeoSerialDebug.print(F(" turn_speed_rate: ")); NeoSerialDebug.println(turn_speed_rate);
     #endif
 }
 
@@ -203,8 +203,8 @@ void Move::BackLeftward(float speed_rate, float turn_speed_rate)
 
     #ifdef MOVE_DEBUG
     //调试输出向后左转状态
-    NeoSerial.print(F("#MOVE:   Move BackLeftward"));
-    NeoSerial.print(F(" speed_rate: ")); NeoSerial.print(speed_rate); NeoSerial.print(F(" turn_speed_rate: ")); NeoSerial.println(turn_speed_rate);
+    NeoSerialDebug.print(F("#MOVE:   Move BackLeftward"));
+    NeoSerialDebug.print(F(" speed_rate: ")); NeoSerialDebug.print(speed_rate); NeoSerialDebug.print(F(" turn_speed_rate: ")); NeoSerialDebug.println(turn_speed_rate);
     #endif
 }
 
@@ -223,8 +223,8 @@ void Move::BackRightward(float speed_rate, float turn_speed_rate)
 
     #ifdef MOVE_DEBUG
     //调试输出向后右转状态
-    NeoSerial.print(F("#MOVE:   Move BackRightward"));
-    NeoSerial.print(F(" speed_rate: ")); NeoSerial.print(speed_rate); NeoSerial.print(F(" turn_speed_rate: ")); NeoSerial.println(turn_speed_rate);
+    NeoSerialDebug.print(F("#MOVE:   Move BackRightward"));
+    NeoSerialDebug.print(F(" speed_rate: ")); NeoSerialDebug.print(speed_rate); NeoSerialDebug.print(F(" turn_speed_rate: ")); NeoSerialDebug.println(turn_speed_rate);
     #endif
 }
 
@@ -243,7 +243,7 @@ void Move::Stop(void)
 
     #ifdef MOVE_DEBUG
     //调试输出制动状态
-    NeoSerial.println(F("#MOVE:   Move Stop"));
+    NeoSerialDebug.println(F("#MOVE:   Move Stop"));
     #endif
 }
 
