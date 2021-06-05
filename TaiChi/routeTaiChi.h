@@ -8,7 +8,7 @@
 #define ROUTE_DEBUG
 
 #ifdef ROUTE_DEBUG
-#define NeoSerialDebug NeoSerial3
+#define NeoSerialDebug NeoSerial
 #endif
 
 //坐标点操作定义

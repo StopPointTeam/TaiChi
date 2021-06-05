@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdint.h>
 #include <NeoHWSerial.h>
 
-#define NeoSerialDebug NeoSerial3
+#define NeoSerialDebug NeoSerial
 
 /*! \mainpage
 

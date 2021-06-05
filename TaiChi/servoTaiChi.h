@@ -8,7 +8,7 @@
 #define SERVO_DEBUG
 
 #ifdef SERVO_DEBUG
-#define NeoSerialDebug NeoSerial3
+#define NeoSerialDebug NeoSerial
 #endif
 
 //与舵机控制板连接串口

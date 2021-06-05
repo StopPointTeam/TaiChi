@@ -186,7 +186,7 @@ void HandleMessage(const char* message);
 
 #include "MemoryUsage.h"
 
-#define NeoSerialDebug NeoSerial3
+#define NeoSerialDebug NeoSerial
 #define DEBUG_BAUT_RATE 115200
 
 int loop_time = 0;
@@ -237,7 +237,17 @@ void setup()
     sensor.StartHMC5883();
 
     //在开始运行前依次检测各灰度传感器下方黑白是否正常
-    CheckGrayStatus();
+    //CheckGrayStatus();
+
+    while (1)
+    {
+        sensor.IsWhite(GRAY_1);
+        sensor.IsWhite(GRAY_2);
+        sensor.IsWhite(GRAY_3);
+        sensor.IsWhite(GRAY_4);
+        sensor.IsWhite(GRAY_5);
+        sensor.IsWhite(GRAY_6);
+    }
 
     //前往 0, 0
     //沿线直行，到后端传感器接触下一条线离开函数
@@ -812,7 +822,7 @@ void LineBackward(uint8_t end_position, uint8_t type, float speed_rate)
             if (sensor.IsWhite(GRAY_1))
                 gray_match_a = true;
             
-            if (sensor.IsWhite(GRAY_2))
+            if (sensor.IsWhite(GRAY_2)) 
                 gray_match_b = true;
         }
         else //后端接触线离开函数

@@ -213,12 +213,12 @@ bool Sensor::IsPushed(uint8_t button_num)
         NeoSerialDebug.print(F("#SENSOR: BUTTON_1: "));
     else NeoSerialDebug.print(F("#SENSOR: BUTTON_2: "));
 
-    if (button_val == LOW)
+    if (button_val == HIGH)
         NeoSerialDebug.println(F("pushed"));
     else NeoSerialDebug.println(F("released"));
     #endif    
 
-    if (button_val == LOW)
+    if (button_val == HIGH)
         return true;
     else return false;
 }

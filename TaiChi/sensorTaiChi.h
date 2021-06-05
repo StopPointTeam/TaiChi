@@ -6,7 +6,7 @@
 #define SENSOR_DEBUG
 
 #ifdef SENSOR_DEBUG
-#define NeoSerialDebug NeoSerial3
+#define NeoSerialDebug NeoSerial
 #endif
 
 //灰度传感器 OUT 接口定义
@@ -48,15 +48,15 @@
 #define GRAY_6 5
 #define GRAY_7 6
 
-//碰撞传感器 OUT 接口定义
+//开关传感器 OUT 接口定义
 #define BUTTON_1_OUT 2
 #define BUTTON_2_OUT 3
 
-//碰撞传感器 VCC 接口定义
+//开关传感器 VCC 接口定义
 #define BUTTON_1_VCC 45
 #define BUTTON_2_VCC 46
 
-//碰撞传感器标识定义
+//开关传感器标识定义
 #define BUTTON_1 0
 #define BUTTON_2 1
 
@@ -81,7 +81,7 @@ public:
     //灰度传感器灰度值偏离比例，即 (gray_gate - gray_val) / gray_gate
     static float GrayDeviationRate(uint8_t gray_sensor_num);
 
-    //碰撞传感器（开关）判断是否闭合
+    //开关判断是否闭合
     static bool IsPushed(uint8_t button_num);
 
     //开启 HMC5883 的 I2C 通讯

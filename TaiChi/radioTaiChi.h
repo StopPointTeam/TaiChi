@@ -8,7 +8,7 @@
 #define RADIO_DEBUG
 
 #ifdef RADIO_DEBUG
-#define NeoSerialDebug NeoSerial3
+#define NeoSerialDebug NeoSerial
 #endif
 
 //默认与 HC-12 连接串口
